@@ -12,7 +12,7 @@ HG.Touch = {
     return s.replace(/아무 키나 누르세요/g, '화면이나 A 버튼을 누르세요').replace(/스페이스\/Z\/엔터/g, 'A').replace(/X\/백스페이스/g, 'B')
       .replace(/메뉴\(Esc\)/g, '메뉴 버튼').replace(/Esc 메뉴/g, '메뉴 버튼').replace(/Esc/g, '메뉴')
       .replace(/스페이스바/g, 'A').replace(/스페이스/g, 'A')
-      .replace(/X를 눌러/g, 'B를 눌러').replace(/X를 누른 채 방향키/g, 'B를 누른 채 방향 버튼').replace(/X: 취소/g, 'B: 취소').replace(/X 처음부터/g, 'B 처음부터')
+      .replace(/X를 눌러/g, 'B를 눌러').replace(/X를 누른 채 방향키/g, 'B를 누른 채 방향 버튼').replace(/X: 취소/g, 'B: 취소').replace(/X 힌트/g, 'B 힌트').replace(/X를 눌러 보/g, 'B를 눌러 보').replace(/X 처음부터/g, 'B 처음부터')
       .replace(/방향키/g, '방향 버튼');
   },
 

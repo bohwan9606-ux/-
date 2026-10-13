@@ -204,7 +204,7 @@
   // ════════════════════════════════════════
   HG.registerMini(HG.SlideScene = class extends HG.MiniGame {
     constructor() { super('Slide'); }
-    defaults() { return { title: '지도 조각 맞추기', name: '지도 조각 퍼즐', shuffle: 70, bg: 'palace', music: 'village', help: '방향키로 빈칸 옆 조각 밀기', intro: ['지도 조각이 뒤섞여 버렸어! 빈칸 옆의 조각을 밀어서 오른쪽 그림처럼 맞춰 보자.', '방향키를 누르면 그 방향으로 조각이 빈칸에 미끄러져 들어가.'] }; }
+    defaults() { return { title: '지도 조각 맞추기', name: '지도 조각 퍼즐', shuffle: 12, bg: 'palace', music: 'village', help: '방향키 조각 밀기 · X 힌트', intro: ['지도 조각이 뒤섞여 버렸어! 빈칸 옆의 조각을 밀어서 오른쪽 그림처럼 맞춰 보자.', '방향키를 누르면 그 방향으로 조각이 빈칸에 미끄러져 들어가. 조각의 숫자를 1부터 8까지 차례로 맞추면 돼!', '막히면 X를 눌러 봐. 다음에 밀 조각이 반짝일 거야.'] }; }
     setup() {
       // 지도 그림 (90×90)
       if (!this.textures.exists('mg_mapimg')) {
@@ -234,18 +234,44 @@
       if (this.solved()) this.swap(this.neighbors(this.board.indexOf(8))[0]);
       this.tiles = [];
       for (let k = 0; k < 8; k++) this.tiles[k] = this.add.image(0, 0, 'mg_mapimg', 't' + k).setOrigin(0).setScale(this.TS / 30 * 0.97).setDepth(5);
+      // 조각 번호 (완성 그림에도 같은 번호)
+      this.nums = [];
+      for (let k = 0; k < 8; k++) this.nums[k] = HG.UI.text(this, 0, 0, String(k + 1), { depth: 7, color: '#fff4a8', stroke: '#1a1410' });
+      for (let k = 0; k < 8; k++) HG.UI.text(this, 250 - 40 + (k % 3) * 27 + 3, 72 - 40 + Math.floor(k / 3) * 27 + 1, String(k + 1), { depth: 4, small: true, color: '#fff4a8', stroke: '#1a1410' });
       this.moves = 0; this.place(true);
     }
     neighbors(i) { const x = i % 3, y = Math.floor(i / 3), o = []; if (x > 0) o.push(i - 1); if (x < 2) o.push(i + 1); if (y > 0) o.push(i - 3); if (y < 2) o.push(i + 3); return o; }
     swap(i) { const b = this.board.indexOf(8); [this.board[i], this.board[b]] = [this.board[b], this.board[i]]; }
     solved() { return this.board.every((v, i) => v === i); }
+    hintMove() {
+      const goal = '012345678', start = this.board.join('');
+      if (start === goal) return -1;
+      const prev = new Map([[start, null]]), q = [start];
+      for (let h = 0; h < q.length; h++) {
+        const cur = q[h], b = cur.indexOf('8');
+        for (const n of this.neighbors(b)) {
+          const a = cur.split(''); [a[n], a[b]] = [a[b], a[n]]; const nx = a.join('');
+          if (prev.has(nx)) continue;
+          prev.set(nx, cur);
+          if (nx === goal) { let st = nx; while (prev.get(st) !== start) st = prev.get(st); return start.indexOf('8') === st.indexOf('8') ? -1 : +start[st.indexOf('8')]; }
+          q.push(nx);
+        }
+      }
+      return -1;
+    }
     place(now) {
-      this.board.forEach((k, i) => { if (k === 8) return; const t = this.tiles[k], x = this.OX + (i % 3) * this.TS, y = this.OY + Math.floor(i / 3) * this.TS; if (now) t.setPosition(x, y); else this.tweens.add({ targets: t, x, y, duration: 110 }); });
+      this.board.forEach((k, i) => { if (k === 8) return; const t = this.tiles[k], n = this.nums[k], x = this.OX + (i % 3) * this.TS, y = this.OY + Math.floor(i / 3) * this.TS; if (now) { t.setPosition(x, y); n.setPosition(x + 3, y + 1); } else { this.tweens.add({ targets: t, x, y, duration: 110 }); this.tweens.add({ targets: n, x: x + 3, y: y + 1, duration: 110 }); } });
       this.hudR.setText(`움직인 횟수 ${this.moves}`);
     }
     async play() {
       return new Promise(res => {
         this.input2(a => {
+          if (a === 'cancel') {
+            const k = this.hintMove(); if (k < 0) return;
+            HG.Sound.sfx('select'); this.hints = (this.hints || 0) + 1;
+            this.tweens.add({ targets: [this.tiles[k], this.nums[k]], alpha: 0.25, yoyo: true, repeat: 2, duration: 160, onComplete: () => { this.tiles[k].setAlpha(1); this.nums[k].setAlpha(1); } });
+            return;
+          }
           if (!D4[a]) return;
           const b = this.board.indexOf(8), bx = b % 3, by = Math.floor(b / 3);
           const [dx, dy] = D4[a]; const sx = bx - dx, sy = by - dy;   // 빈칸 반대쪽 조각이 들어옴
@@ -255,7 +281,7 @@
             this.keys.stack = []; HG.Sound.sfx('levelup');
             const full = this.add.image(this.OX, this.OY, 'mg_mapimg', '__BASE').setOrigin(0).setScale(this.TS * 3 / 90).setDepth(6).setAlpha(0);
             this.tweens.add({ targets: full, alpha: 1, duration: 500 });
-            this.time.delayedCall(900, () => res(this.moves <= 60 ? '★★★' : this.moves <= 110 ? '★★☆' : '★☆☆'));
+            this.time.delayedCall(900, () => res(this.moves <= 20 && !this.hints ? '★★★' : this.moves <= 45 ? '★★☆' : '★☆☆'));
           }
         });
       });
