@@ -96,8 +96,8 @@ HG.TradeScene = class extends Phaser.Scene {
   }
   async win() {
     HG.Sound.play('victory');
-    HG.state.party.forEach(m => HG.gainExp(m, this.p.exp));
-    await this.dlg.say(`목표 ${this.p.goal}냥 달성!`, ...this.p.outro, `동료들이 경험치를 ${this.p.exp}씩 얻었다!`);
+    const g = HG.miniExp(this, this.p.exp);
+    await this.dlg.say(`목표 ${this.p.goal}냥 달성!`, ...this.p.outro, HG.expMsg(g, this.p.exp));
     await this.end('win');
   }
   async lose() {

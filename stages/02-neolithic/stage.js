@@ -97,7 +97,7 @@
     if (ev.flag('neoPot')) { await ev.say('토기 빚는 사람: 토기 덕분에 곡식을 오래 담아 둘 수 있어. 농사를 짓게 되면서 꼭 필요해졌지.'); return; }
     const c = await ev.choose('토기 빚는 사람: 곡식을 담을 그릇이 모자라. 토기 빚는 걸 도와줄래?', ['도와줄게요!', '다음에요'], 1);
     if (c !== 0) return;
-    await ev.build(POT);
+    if (await ev.build(POT) !== 'win') { await ev.say('다음에 다시 도와줘!'); return; }
     ev.setFlag('neoPot');
     ev.addMon('combpot', 8); HG.Sound.sfx('levelup');
     await ev.say('빗살무늬 토기가 동료가 되었다!');
@@ -132,7 +132,7 @@
     await ev.say('농부: 밭에서 조와 피 같은 곡식을 길러. 신석기 시대부터 사람들이 농사를 짓기 시작했단다.');
     const c = await ev.choose('농부: 거둔 곡식을 갈돌로 갈아야 하는데, 도와줄래?', ['도와줄게요!', '다음에요'], 1);
     if (c !== 0) return;
-    await ev.mini('Timing', GRIND);
+    if (await ev.mini('Timing', GRIND) !== 'win') { await ev.say('다음에 다시 도와줘!'); return; }
     ev.setFlag('neoGrind');
     ev.addMon('grinder', 8); HG.Sound.sfx('levelup');
     await ev.say('갈돌과 갈판이 동료가 되었다!');

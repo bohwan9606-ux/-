@@ -97,9 +97,9 @@ HG.StealthScene = class extends Phaser.Scene {
   async win() {
     this.on = false;
     HG.Sound.play('victory');
-    HG.state.party.forEach(m => HG.gainExp(m, this.p.exp));
+    const g = HG.miniExp(this, this.p.exp);
     const stars = this.caught === 0 ? '★★★' : this.caught <= 2 ? '★★☆' : '★☆☆';
-    await this.dlg.say(...this.p.outro.map((l, i) => i === 0 ? `${l}  ${stars}` : l), `동료들이 경험치를 ${this.p.exp}씩 얻었다!`);
+    await this.dlg.say(...this.p.outro.map((l, i) => i === 0 ? `${l}  ${stars}` : l), HG.expMsg(g, this.p.exp));
     HG.Sound.stop(); this.cameras.main.fadeOut(250); await HG.UI.wait(this, 260); HG.Save.save();
     const cb = this.onEnd; this.onEnd = null; if (cb) cb('win');
   }

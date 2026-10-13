@@ -239,7 +239,7 @@
     if (!ev.flag('taskBuild')) {
       const c = await ev.choose('막집 짓는 사람: 새 막집을 짓는데 일손이 모자라. 도와줄래?', ['도와줄게요!', '다음에요'], 1);
       if (c !== 0) return;
-      await ev.build();
+      if (await ev.build() !== 'win') { await ev.say('다음에 다시 도와줘!'); return; }
       ev.setFlag('taskBuild');
       await ev.say('막집 짓는 사람: 고마워! 가죽을 다듬을 때 쓰던 이 녀석이 너랑 같이 가고 싶대.');
       ev.addMon('scraper', 6);

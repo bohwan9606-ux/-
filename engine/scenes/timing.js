@@ -120,8 +120,8 @@ HG.TimingScene = class extends Phaser.Scene {
   async finishWin(stars) {
     const p = this.p;
     HG.Sound.play('victory');
-    HG.state.party.forEach(m => HG.gainExp(m, p.exp));
-    await this.dlg.say(...p.outro.map((l, i) => i === 0 ? `${l}  ${stars}` : l), `동료들이 경험치를 ${p.exp}씩 얻었다!`);
+    const g = HG.miniExp(this, p.exp);
+    await this.dlg.say(...p.outro.map((l, i) => i === 0 ? `${l}  ${stars}` : l), HG.expMsg(g, p.exp));
     await this.end('win');
   }
   async end(r) {

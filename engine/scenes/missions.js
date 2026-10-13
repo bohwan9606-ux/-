@@ -133,9 +133,9 @@
       await big(this, this.p.done, 900);
       const left = this.posts.reduce((a, p) => a + p.hp, 0), max = this.posts.length * 3;
       const stars = left >= max * 0.8 ? '★★★' : left >= max * 0.5 ? '★★☆' : '★☆☆';
-      if (this.p.exp) HG.state.party.forEach(m => HG.gainExp(m, this.p.exp));
+      const g = this.p.exp ? HG.miniExp(this, this.p.exp) : 0;
       const o = this.p.outro.slice(); o[0] = `${o[0]} 남은 하트 ${left}/${max}  ${stars}`;
-      if (this.p.exp) o.push(`동료들이 경험치를 ${this.p.exp}씩 얻었다!`);
+      if (this.p.exp) o.push(HG.expMsg(g, this.p.exp));
       await this.dlg.say(...o);
       await finish(this, 'win');
     }
@@ -229,9 +229,9 @@
       this.over = true;
       HG.Sound.play('victory');
       await big(this, this.p.done, 900);
-      if (this.p.exp) HG.state.party.forEach(m => HG.gainExp(m, this.p.exp));
+      const g = this.p.exp ? HG.miniExp(this, this.p.exp) : 0;
       const o = [(this.hit <= 2 ? '거의 부딪히지 않았다! ' : '조금 부딪혔지만 괜찮아! ') + this.p.outro[0], ...this.p.outro.slice(1)];
-      if (this.p.exp) o.push(`동료들이 경험치를 ${this.p.exp}씩 얻었다!`);
+      if (this.p.exp) o.push(HG.expMsg(g, this.p.exp));
       await this.dlg.say(...o);
       await finish(this, 'win');
     }

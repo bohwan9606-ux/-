@@ -157,6 +157,63 @@ HG.Dev = {
 };
 window.addEventListener('keydown', e => { if (e.code === 'F8') { e.preventDefault(); HG.Dev.quickWin(); } });
 
+// ── 미니게임 그만두기: 미니게임 중 Esc(태블릿은 메뉴 버튼) → 「그만둘까요?」 → 나가면 '다음에 다시 도전'
+HG.Quit = {
+  open: false,
+  // 지금 하고 있는 미니게임 (6·25 작전 지도 안의 작은 게임은 작전 지도 전체를 그만둠)
+  target() {
+    if (!HG.game) return null;
+    const act = HG.game.scene.getScenes(true), M = HG.game.scene;
+    const war = M.getScene('War');
+    if (war && (M.isActive('War') || M.isPaused('War'))) return war.onEnd ? war : null;
+    return [...act].reverse().find(s => s.onEnd && (HG.MINIS.some(c => c.KEY === s.scene.key) || HG.Dev.OLD_MINIS.includes(s.scene.key))) || null;
+  },
+  ask() {
+    const sc = this.target();
+    if (!sc || this.open || (sc instanceof HG.MiniGame && sc.over)) return;
+    this.open = true;
+    const paused = HG.game.scene.getScenes(true).filter(s => s.scene.key !== 'UI');
+    paused.forEach(s => s.scene.pause());
+    HG.Keys.typing = true;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:40;';
+    const btn = 'font-family:Galmuri11,sans-serif;font-size:20px;padding:8px 22px;border:3px solid #1a1410;border-radius:8px;margin:0 6px;';
+    wrap.innerHTML = '<div style="background:#e9e2d0;border:4px solid #6b4a2b;outline:3px solid #1a1410;padding:22px 26px;font-family:Galmuri11,sans-serif;color:#1a1410;font-size:21px;text-align:center;max-width:92vw">' +
+      '<div style="margin-bottom:6px">미니게임을 그만둘까요?</div><div style="font-size:15px;color:#6b4a2b;margin-bottom:16px">그만두어도 나중에 다시 도전할 수 있어요.</div>' +
+      '<button id="qgo" style="' + btn + 'background:#3a6aa8;color:#e9e2d0">계속하기</button><button id="qno" style="' + btn + 'background:#bf4436;color:#e9e2d0">그만두기</button>' +
+      '<div style="font-size:13px;color:#6b4a2b;margin-top:12px">←→ 고르고 스페이스</div></div>';
+    document.body.appendChild(wrap);
+    const bGo = wrap.querySelector('#qgo'), bNo = wrap.querySelector('#qno');
+    let sel = 0;
+    const mark = () => { bGo.style.outline = sel === 0 ? '4px solid #dcbc48' : 'none'; bNo.style.outline = sel === 1 ? '4px solid #dcbc48' : 'none'; };
+    mark();
+    const done = quit => {
+      window.removeEventListener('keydown', key, true);
+      wrap.remove(); this.open = false;
+      setTimeout(() => { HG.Keys.typing = false; }, 60);
+      if (!quit) { paused.forEach(s => { if (s.scene.isPaused()) s.scene.resume(); }); return; }
+      HG.Sound.stop();
+      // 6·25 안의 작은 게임까지 함께 닫기
+      const M = HG.game.scene;
+      if (sc.scene.key === 'War') HG.Dev.OLD_MINIS.concat(HG.MINIS.map(c => c.KEY)).forEach(k => { if (k !== 'War' && (M.isActive(k) || M.isPaused(k))) { const s = M.getScene(k); s.onEnd = null; if (s instanceof HG.MiniGame) s.over = true; M.stop(k); } });
+      if (sc instanceof HG.MiniGame) sc.over = true;
+      if (sc.time) sc.time.removeAllEvents(); if (sc.keys) sc.keys.stack = [];
+      const cb = sc.onEnd; sc.onEnd = null;
+      if (cb) cb('quit');
+    };
+    const key = e => {
+      e.preventDefault(); e.stopPropagation();
+      if (e.repeat) return;
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'KeyA' || e.code === 'KeyD') { sel = 1 - sel; mark(); HG.Sound.sfx('cursor'); }
+      else if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyZ') done(sel === 1);
+      else if (e.code === 'Escape' || e.code === 'KeyX' || e.code === 'Backspace') done(false);
+    };
+    window.addEventListener('keydown', key, true);
+    bGo.onclick = () => done(false); bNo.onclick = () => done(true);
+  }
+};
+window.addEventListener('keydown', e => { if (e.code === 'Escape' && !HG.Quit.open && !HG.Keys.typing && HG.Quit.target()) { e.preventDefault(); HG.Quit.ask(); } });
+
 window.addEventListener('load', () => {
   HG.game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -167,6 +224,10 @@ window.addEventListener('load', () => {
     roundPixels: true,
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: [HG.BootScene, HG.TitleScene, HG.WorldScene, HG.BattleScene, HG.HuntScene, HG.GatherScene, HG.BuildScene, HG.RefugeeScene, HG.DefenseScene, HG.LandingScene, HG.WarScene, HG.TimingScene, HG.TradeScene, HG.StealthScene, HG.MapStageScene, HG.CreditsScene, HG.MenuScene, HG.CutsceneScene].concat(HG.MINIS)
+  });
+  // 미니게임 화면 왼쪽 아래에 「Esc 그만두기」 안내
+  HG.game.events.once('ready', () => {
+    HG.Dev.OLD_MINIS.concat(HG.MINIS.map(c => c.KEY)).forEach(k => { const sc = HG.game.scene.getScene(k); if (sc) sc.events.on('create', () => { if (k === 'War' && !sc.onEnd) return; HG.UI.text(sc, 4, HG.H - 24, 'Esc: 그만두기', { depth: 960, small: true, color: '#e9e2d0', stroke: '#1a1410' }); }); });
   });
   // 창을 닫을 때도 저장
   window.addEventListener('beforeunload', () => { if (HG.state) HG.Save.save(); });

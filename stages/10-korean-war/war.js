@@ -289,7 +289,7 @@
       if (this.missionMode) {
         this.setDate('1953년 이후');
         await this.say(`퀴즈 ${ok}/3 맞힘!`, '할아버지: 전쟁의 아픔을 딛고 우리나라는 다시 일어섰단다. 이제 평화를 지키는 건 너희들의 몫이야.');
-        HG.state.party.forEach(m => HG.gainExp(m, 60));
+        HG.miniExp(this, 60);
         HG.Sound.stop(); this.cameras.main.fadeOut(300); await HG.UI.wait(this, 320);
         this.onEnd('win'); return;
       }

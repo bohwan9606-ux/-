@@ -139,8 +139,8 @@ HG.GatherScene = class extends Phaser.Scene {
       HG.Sound.play('victory');
       await this.bigText(p.done, 800);
       if (p.reward) s.bag[p.reward.item] = (s.bag[p.reward.item] || 0) + p.reward.n;
-      s.party.forEach(m => HG.gainExp(m, p.exp));
-      await this.dlg.say(...p.win, `동료들이 경험치를 ${p.exp}씩 얻었다!`);
+      const g = HG.miniExp(this, p.exp);
+      await this.dlg.say(...p.win, HG.expMsg(g, p.exp));
       this.result = 'win';
     } else {
       HG.Sound.stop();

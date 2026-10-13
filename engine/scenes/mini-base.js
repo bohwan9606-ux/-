@@ -37,13 +37,13 @@ HG.MiniGame = class extends Phaser.Scene {
     this.time.removeAllEvents();
     this.keys.stack = [];
     if (this.devWon) {
-      HG.state && HG.state.party.forEach(m => HG.gainExp(m, p.exp));
+      HG.miniExp(this, p.exp);
       await this.end('win');
     } else if (stars) {
       HG.Sound.play('victory');
-      HG.state && HG.state.party.forEach(m => HG.gainExp(m, p.exp));
+      const g = HG.miniExp(this, p.exp);
       const out = p.outro.length ? p.outro : ['성공!'];
-      await this.dlg.say(...out.map((l, i) => i === 0 ? `${l}  ${stars}` : l), `동료들이 경험치를 ${p.exp}씩 얻었다!`);
+      await this.dlg.say(...out.map((l, i) => i === 0 ? `${l}  ${stars}` : l), HG.expMsg(g, p.exp));
       await this.end('win');
     } else {
       HG.Sound.sfx('wrong');

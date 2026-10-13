@@ -57,3 +57,21 @@ HG.Score = {
     return '꼬마 시간 여행자';
   }
 };
+
+// ── 같은 미니게임을 반복하면 경험치가 1/3씩 줄어듦 (처음 100% → 33% → 11% → 4% …)
+// 미니게임마다(장면 + 제목) 성공 횟수를 기록
+HG.miniExp = function (scene, base) {
+  if (!HG.state || !base) return 0;
+  const f = HG.state.flags, k = scene.scene.key + ':' + ((scene.p && scene.p.title) || '');
+  f.miniWins = f.miniWins || {};
+  const n = f.miniWins[k] || 0;
+  f.miniWins[k] = n + 1;
+  const g = Math.floor(base * Math.pow(1 / 3, n));
+  HG.state.party.forEach(m => HG.gainExp(m, g));
+  return g;
+};
+HG.expMsg = function (g, base) {
+  if (g >= base) return `동료들이 경험치를 ${g}씩 얻었다!`;
+  if (g >= 1) return `동료들이 경험치를 ${g}씩 얻었다. (같은 미니게임은 할수록 경험치가 줄어요)`;
+  return '이미 여러 번 해서 이번에는 경험치를 얻지 못했다.';
+};

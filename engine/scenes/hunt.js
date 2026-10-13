@@ -184,8 +184,10 @@ HG.HuntScene = class extends Phaser.Scene {
       s.flags.huntWin = (s.flags.huntWin || 0) + 1;
       const lines = [`모두 힘을 합쳐 매머드를 잡았다! 고기 ${meat}개를 나눠 받았다.`];
       const ups = [];
-      s.party.forEach(m => { const r = HG.gainExp(m, 40); if (r.levels) ups.push(`${HG.monName(m)} Lv${m.level}`); });
-      if (s.party.length) lines.push('동료들이 경험치를 40씩 얻었다!');
+      const lv0 = s.party.map(m => m.level);
+      const g = HG.miniExp(this, 40);
+      s.party.forEach((m, i) => { if (m.level > lv0[i]) ups.push(`${HG.monName(m)} Lv${m.level}`); });
+      if (s.party.length) lines.push(HG.expMsg(g, 40));
       if (ups.length) { HG.Sound.sfx('levelup'); lines.push('레벨 업! ' + ups.join(', ')); }
       await this.dlg.say(...lines);
       this.result = 'win';

@@ -98,7 +98,7 @@ HG.talkQuiz = async function (ev, speaker, cases) {
     if (opts[pick] === q.options[0]) { ok++; HG.Score.markQuiz(q, true); HG.Sound.sfx('correct'); await ev.say(`${speaker}: ${q.good || '바로 그거다!'}`); }
     else { HG.Sound.sfx('wrong'); await ev.say(`${speaker}: 음… '${q.options[0]}'${HG.josa(q.options[0], '이', '가')} 알맞단다.`, q.why); }
   }
-  HG.state.party.forEach(m => HG.gainExp(m, 40));
-  await ev.say(`${cases.length}개 중 ${ok}개를 맞혔다! 동료들이 경험치를 40씩 얻었다.`);
+  const g = HG.miniExp({ scene: { key: 'talkQuiz' }, p: { title: speaker } }, 40);
+  await ev.say(`${cases.length}개 중 ${ok}개를 맞혔다! ` + HG.expMsg(g, 40));
   return 'win';
 };

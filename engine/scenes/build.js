@@ -86,8 +86,8 @@ HG.BuildScene = class extends Phaser.Scene {
     }
     this.stepTxt.setText(p.title + ' 완성!');
     HG.Sound.play('victory');
-    HG.state.party.forEach(m => HG.gainExp(m, p.exp));
-    await this.dlg.say(...p.outro, `동료들이 경험치를 ${p.exp}씩 얻었다!`);
+    const g = HG.miniExp(this, p.exp);
+    await this.dlg.say(...p.outro, HG.expMsg(g, p.exp));
     HG.Sound.stop();
     this.cameras.main.fadeOut(250);
     await HG.UI.wait(this, 260);
