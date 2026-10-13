@@ -134,6 +134,7 @@ HG.MapStageScene = class extends Phaser.Scene {
         if (r === 'gone') return;
       } else if (n.kind === 'boss') await this.bossNode(n);
       else await this.missionNode(n);
+      await HG.boxNotice((...l) => this.say(...l));
     } catch (e) { console.error(e); }
     this.refreshIcons(); this.showNode();
     HG.Save.save();

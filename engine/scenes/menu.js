@@ -8,7 +8,7 @@ HG.MenuScene = class extends Phaser.Scene {
     this.dlg = new HG.UI.Dialog(this, this.keys);
     this.add.rectangle(0, 0, HG.W, HG.H, 0x000000, 0.35).setOrigin(0).setDepth(0);
     this.layer = [];
-    (this.mode === 'museum' ? this.museum() : this.main()).then(() => this.close());
+    (this.mode === 'museum' ? this.museum() : this.mode === 'swap' ? this.swap() : this.main()).then(() => this.close());
   }
 
   close() { const cb = this.onEnd; this.onEnd = null; if (cb) cb(); }
@@ -47,7 +47,8 @@ HG.MenuScene = class extends Phaser.Scene {
     let i = 0;
     while (true) {
       const P = HG.state.party;
-      this.page('동료  (' + P.length + '/6)');
+      const B = HG.state.box.length;
+      this.page('동료  (' + P.length + '/6)' + (B ? `   · 타임머신에 맡긴 동료 ${B}` : ''));
       if (!P.length) { this.L(HG.UI.text(this, 20, 40, '아직 동료가 없어요.', { depth: 11 })); await this.waitKey(); return; }
       P.forEach((m, k) => {
         const y = 28 + k * 22;
@@ -107,35 +108,88 @@ HG.MenuScene = class extends Phaser.Scene {
     await this.waitKey();
   }
 
-  // ── 도감
+  // ── 도감 (한 쪽에 6칸씩, 넘어가면 다음 쪽)
   async dex() {
     let i = 0;
-    const ids = HG.dexList();
+    const ids = HG.dexList(), PER = 6, cols = 3, pages = Math.ceil(ids.length / PER);
     while (true) {
-      const s = HG.state.dex;
-      const caught = ids.filter(id => s.caught[id]).length;
-      this.page(`유물 도감   ${caught}/${ids.length}`);
-      const cols = 3;
-      ids.forEach((id, k) => {
-        const x = 20 + (k % cols) * 98, y = 28 + Math.floor(k / cols) * 70;
-        this.L(this.add.rectangle(x, y, 88, 62, 0xd6c9a2).setOrigin(0).setDepth(11).setStrokeStyle(1, 0x6b4a2b));
-        const A = HG.ARTIFACTS[id];
-        this.L(HG.UI.text(this, x + 4, y + 3, 'No.' + String(A.no).padStart(3, '0'), { depth: 12, small: true, color: '#6b4a2b' }));
-        if (s.seen[id] || s.caught[id]) {
-          const img = this.L(this.add.image(x + 44, y + 30, 'mon_' + id).setDepth(12));
-          if (!s.caught[id]) img.setTint(0x1a1410);
-          this.L(HG.UI.text(this, x + 44, y + 47, A.name, { depth: 12, small: true }).setOrigin(0.5, 0));
-          if (s.caught[id + '_s']) this.L(HG.UI.text(this, x + 82, y + 3, '★', { depth: 12, small: true, color: '#f08a2a' }).setOrigin(1, 0));
-        } else {
-          this.L(HG.UI.text(this, x + 44, y + 22, '?', { depth: 12, color: '#8a8478' }).setOrigin(0.5, 0));
-        }
-      });
-      const k = await this.gridCursor(ids.length, cols, (k) => [20 + (k % cols) * 98 - 2, 28 + Math.floor(k / cols) * 70 - 2, 92, 66], i);
+      const k = await this.pagedGrid(ids.length, PER, cols, i, (pg) => {
+        const s = HG.state.dex;
+        const caught = ids.filter(id => s.caught[id]).length;
+        this.page(`유물 도감   ${caught}/${ids.length}`);
+        this.L(HG.UI.text(this, HG.W - 14, 10, `${pg + 1}/${pages}쪽  ◀▶ 넘기기`, { depth: 11, small: true, color: '#6b4a2b' }).setOrigin(1, 0));
+        ids.slice(pg * PER, pg * PER + PER).forEach((id, j) => {
+          const x = 20 + (j % cols) * 98, y = 28 + Math.floor(j / cols) * 70;
+          this.L(this.add.rectangle(x, y, 88, 62, 0xd6c9a2).setOrigin(0).setDepth(11).setStrokeStyle(1, 0x6b4a2b));
+          const A = HG.ARTIFACTS[id];
+          this.L(HG.UI.text(this, x + 4, y + 3, 'No.' + String(A.no).padStart(3, '0'), { depth: 12, small: true, color: '#6b4a2b' }));
+          if (s.seen[id] || s.caught[id]) {
+            const img = this.L(this.add.image(x + 44, y + 30, 'mon_' + id).setDepth(12));
+            if (!s.caught[id]) img.setTint(0x1a1410);
+            this.L(HG.UI.text(this, x + 44, y + 47, A.name, { depth: 12, small: true }).setOrigin(0.5, 0));
+            if (s.caught[id + '_s']) this.L(HG.UI.text(this, x + 82, y + 3, '★', { depth: 12, small: true, color: '#f08a2a' }).setOrigin(1, 0));
+          } else {
+            this.L(HG.UI.text(this, x + 44, y + 22, '?', { depth: 12, color: '#8a8478' }).setOrigin(0.5, 0));
+          }
+        });
+        if (pg < pages - 1) this.L(HG.UI.text(this, HG.W / 2, 166, '▼', { depth: 12, small: true, color: '#6b4a2b' }).setOrigin(0.5, 0));
+      }, j => [20 + (j % cols) * 98 - 2, 28 + Math.floor(j / cols) * 70 - 2, 92, 66]);
       if (k < 0) return;
       i = k;
       await this.dexDetail(ids[k]);
     }
   }
+  // 여러 쪽짜리 칸 고르기: 위아래로 줄 이동(쪽을 넘어가면 다음 쪽), 좌우로 칸 이동, 쪽 끝에서 좌우를 누르면 쪽 넘김
+  pagedGrid(n, per, cols, start, drawPage, rectOf) {
+    return new Promise(res => {
+      let i = Math.min(start || 0, n - 1), pg = -1;
+      const g = this.add.graphics().setDepth(13);
+      const draw = () => {
+        const p = Math.floor(i / per);
+        if (p !== pg) { pg = p; drawPage(pg); }
+        const [x, y, w, h] = rectOf(i - pg * per); g.clear(); g.lineStyle(2, 0xd04a3a).strokeRect(x, y, w, h); g.setDepth(13); this.children.bringToTop(g);
+      };
+      draw();
+      const h = this.keys.push(act => {
+        if (act === 'left') i = (i + n - 1) % n;
+        else if (act === 'right') i = (i + 1) % n;
+        else if (act === 'up') i = i - cols >= 0 ? i - cols : i;
+        else if (act === 'down') i = i + cols < n ? i + cols : (Math.floor(i / cols) < Math.floor((n - 1) / cols) ? n - 1 : i);
+        else if (act === 'ok') { HG.Sound.sfx('select'); this.keys.pop(h); g.destroy(); res(i); return; }
+        else if (act === 'cancel' || act === 'menu') { HG.Sound.sfx('cancel'); this.keys.pop(h); g.destroy(); res(-1); return; }
+        HG.Sound.sfx('cursor'); draw();
+      });
+    });
+  }
+
+  // ── 동료 바꾸기 (타임머신에서): 맡긴 동료 ↔ 데리고 다니는 동료
+  async swap() {
+    const s = HG.state;
+    while (true) {
+      if (!s.box.length) { this.page('동료 바꾸기'); this.L(HG.UI.text(this, 20, 40, '타임머신에 맡겨 둔 동료가 없어요.\n동료가 6명보다 많아지면 여기에 맡겨져요.', { depth: 11, lineSpacing: 6 })); await this.waitKey(); return; }
+      const PER = 6, pages = Math.ceil(s.box.length / PER);
+      const row = (m, y) => { this.L(this.add.image(30, y + 7, this.monTex(m)).setScale(0.6).setDepth(11)); this.L(HG.UI.text(this, 48, y, HG.monName(m), { depth: 11 })); this.L(HG.UI.text(this, 150, y + 1, 'Lv' + m.level, { depth: 11, small: true })); this.L(HG.UI.text(this, 190, y + 1, HG.ARTIFACTS[m.species].type, { depth: 11, small: true, color: '#6b4a2b' })); };
+      const k = await this.pagedGrid(s.box.length, PER, 1, 0, pg => {
+        this.page(`데리고 나올 동료를 고르세요   (맡긴 동료 ${s.box.length})`);
+        if (pages > 1) this.L(HG.UI.text(this, HG.W - 14, 160, `${pg + 1}/${pages}쪽`, { depth: 11, small: true, color: '#6b4a2b' }).setOrigin(1, 0));
+        s.box.slice(pg * PER, pg * PER + PER).forEach((m, j) => row(m, 28 + j * 22));
+      }, j => [14, 26 + j * 22, HG.W - 28, 20]);
+      if (k < 0) return;
+      const pick = s.box[k];
+      if (s.party.length < 6) { s.box.splice(k, 1); s.party.push(pick); HG.Sound.sfx('item'); HG.UI.toast(this, `${HG.monName(pick)}${HG.josa(HG.monName(pick), '을', '를')} 데리고 나왔어요!`); continue; }
+      const j = await this.pagedGrid(s.party.length, 6, 1, 0, () => {
+        this.page(`${HG.monName(pick)}${HG.josa(HG.monName(pick), '과', '와')} 바꿀 동료를 고르세요`);
+        s.party.forEach((m, q) => row(m, 28 + q * 22));
+      }, q => [14, 26 + q * 22, HG.W - 28, 20]);
+      if (j < 0) continue;
+      const out = s.party[j];
+      s.party[j] = pick; s.box[k] = out;
+      HG.Sound.sfx('item');
+      HG.UI.toast(this, `${HG.monName(pick)} 함께 가기 · ${HG.monName(out)} 쉬기`);
+      HG.Save.save();
+    }
+  }
+
   gridCursor(n, cols, rectOf, start) {
     return new Promise(res => {
       let i = start || 0;

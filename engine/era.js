@@ -60,13 +60,14 @@ HG.Era = {
   // 타임머신 메뉴 (모든 시대 공용). cleared: 이 시대 인장을 받았는지
   async timeMachine(ev, cleared) {
     const s = HG.state;
-    const items = ['동료 쉬게 하기', '유물 박물관', '기록 저장', '다음 시대로', '그만두기'];
+    const items = ['동료 쉬게 하기', '동료 바꾸기', '유물 박물관', '기록 저장', '다음 시대로', '그만두기'];
     while (true) {
-      const i = await ev.choose('타임머신이다. 무엇을 할까?', items, 4);
+      const i = await ev.choose('타임머신이다. 무엇을 할까?', items, 5);
       if (i === 0) { if (!s.party.length) { await ev.say('아직 동료가 없다.'); continue; } ev.heal(); await ev.say('동료들이 모두 기운을 되찾았다!'); }
-      else if (i === 1) await ev.menu('museum');
-      else if (i === 2) { HG.Save.save(); HG.Sound.sfx('item'); await ev.say('기록을 저장했다!'); }
-      else if (i === 3) {
+      else if (i === 1) await ev.menu('swap');
+      else if (i === 2) await ev.menu('museum');
+      else if (i === 3) { HG.Save.save(); HG.Sound.sfx('item'); await ev.say('기록을 저장했다!'); }
+      else if (i === 4) {
         if (!cleared) { await ev.say('할아버지: 이 시대의 시간 조각을 아직 못 찾았구나. 스승께 인정을 받아 보렴!'); continue; }
         if (!HG.Era.next(s.era)) { await ev.say('할아버지: 여기가 마지막 시대란다. 모든 시간 조각을 되찾았어! 고맙다, {name}.', '(유물 박물관에서 모은 동료들을 구경하거나, 지도의 거점을 다시 둘러볼 수 있어요.)'); continue; }
         const r = await ev.cutscene('nextEra');

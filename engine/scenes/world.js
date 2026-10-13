@@ -308,7 +308,7 @@ HG.WorldScene = class extends Phaser.Scene {
 
   async runEvent(fn) {
     this.busy = true;
-    try { await fn(this.ev); }
+    try { await fn(this.ev); if (!this.dead) await HG.boxNotice((...l) => this.ev.say(...l)); }
     catch (e) { console.error(e); }
     if (this.dead) return;
     this.busy = false;
@@ -454,11 +454,18 @@ HG.ITEMS = {
 };
 
 // 동료 들이기: 6마리까지 데리고 다니고, 나머지는 타임머신에 맡김
+// 동료가 가득 차서 타임머신에 맡겨졌을 때 안내 (이벤트가 끝날 때 한 번에)
+HG.boxNotice = async function (say) {
+  const l = HG.pendingBox || []; HG.pendingBox = [];
+  if (!l.length) return;
+  const nm = l.join(', '), last = l[l.length - 1].replace('★', '');
+  await say(`함께 다닐 수 있는 동료는 6명까지라서, ${nm}${HG.josa(last, '은', '는')} 타임머신에 맡겨 두었다.`, '타임머신의 「동료 바꾸기」에서 언제든 데리고 나올 수 있어!');
+};
 HG.addToParty = function (m) {
   const s = HG.state;
   s.dex.seen[m.species] = true;
   s.dex.caught[m.species] = true;
   if (m.shiny) s.dex.caught[m.species + '_s'] = true;
   if (s.party.length < 6) { s.party.push(m); return 'party'; }
-  s.box.push(m); return 'box';
+  s.box.push(m); (HG.pendingBox = HG.pendingBox || []).push(HG.monName(m)); return 'box';
 };
