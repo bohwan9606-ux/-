@@ -96,7 +96,12 @@ HG.Art.register(function (scene) {
   Px.draw(scene, 't_walk', 16, 16, p => { Px.rect(p, 0, 0, 16, 16, 'l'); Px.rect(p, 0, 7, 16, 1, 'g'); Px.rect(p, 7, 0, 1, 7, 'g'); Px.rect(p, 3, 8, 1, 8, 'g'); Px.rect(p, 11, 8, 1, 8, 'g'); });
   Px.draw(scene, 't_snow', 16, 16, p => { Px.rect(p, 0, 0, 16, 16, 'w'); p(3, 4, 'l'); p(11, 9, 'l'); p(7, 13, 'l'); });
   Px.draw(scene, 't_line', 16, 16, p => { Px.rect(p, 0, 0, 16, 16, 'G'); Px.rect(p, 0, 7, 6, 2, 'y'); Px.rect(p, 10, 7, 6, 2, 'y'); });
-  Object.assign(HG.TILES, { 'A': { tex: 't_road' }, 'v': { tex: 't_walk' }, 'n': { tex: 't_snow' }, '-': { tex: 't_line' } });
+  // 꽃밭 (들어갈 수 없음): 짙은 풀 위에 빽빽한 들꽃
+  Px.draw(scene, 't_flowerbed', 16, 16, p => {
+    Px.rect(p, 0, 0, 16, 16, 'E'); for (let i = 0; i < 10; i++) p((i * 5 + 1) % 16, (i * 7 + 3) % 16, 'e');
+    [[2, 2, 'P'], [8, 1, 'Y'], [13, 3, 'r'], [5, 6, 'w'], [11, 7, 'P'], [1, 10, 'y'], [7, 11, 'r'], [14, 11, 'w'], [4, 14, 'Y'], [10, 14, 'P']].forEach(([x, y, c]) => { p(x, y, c); p(x + 1, y, c); p(x, y + 1, c); p(x + 1, y + 1, c); p(x, y + 2, 'f'); });
+  });
+  Object.assign(HG.TILES, { 'A': { tex: 't_road' }, 'v': { tex: 't_walk' }, 'n': { tex: 't_snow' }, '-': { tex: 't_line' }, 'h': { tex: 't_flowerbed', solid: true } });
   // 종각 (2×2)
   def('o_bellhouse', 32, 32, p => { Px.poly(p, [[0, 10], [16, 2], [32, 10]], 'G'); Px.rect(p, 2, 10, 28, 2, 'R'); Px.rect(p, 4, 12, 2, 18, 'R'); Px.rect(p, 26, 12, 2, 18, 'R'); Px.ellipse(p, 16, 21, 6, 7, 'f'); Px.rect(p, 10, 26, 12, 2, 'e'); Px.rect(p, 2, 30, 28, 2, 'g'); });
   // 가마 (2×1)
@@ -111,6 +116,19 @@ HG.Art.register(function (scene) {
   def('o_building', 32, 32, p => { Px.rect(p, 3, 2, 26, 29, 'l'); for (let y = 5; y < 26; y += 5) for (let x = 6; x < 27; x += 6) Px.rect(p, x, y, 4, 3, 'c'); Px.rect(p, 12, 25, 8, 6, 'G'); Px.rect(p, 3, 2, 26, 1, 'g'); });
   // 기념관 (2×2)
   def('o_memorial', 32, 32, p => { Px.poly(p, [[0, 10], [16, 3], [32, 10]], 'l'); Px.rect(p, 2, 10, 28, 3, 'w'); [5, 11, 19, 25].forEach(x => Px.rect(p, x, 13, 3, 15, 'w')); Px.rect(p, 0, 28, 32, 4, 'g'); });
+  // 발굴 터 표지판 (1×1): 나무 말뚝 + 노랑·검정 줄
+  def('o_excav', 16, 16, p => { Px.rect(p, 7, 3, 2, 12, 'b'); Px.rect(p, 2, 3, 12, 6, 'Y'); Px.rect(p, 3, 4, 10, 4, 'w'); Px.rect(p, 4, 5, 8, 1, 'k'); Px.rect(p, 4, 7, 6, 1, 'g'); [0, 15].forEach(x => Px.rect(p, x, 11, 1, 4, 'b')); for (let x = 0; x < 16; x += 2) { p(x, 12, 'y'); p(x + 1, 12, 'k'); } });
+  // 발굴 터 부표 (1×1, 물 위)
+  def('o_buoy', 16, 16, p => { Px.ellipse(p, 8, 12, 5, 3, 'w'); Px.rect(p, 4, 9, 9, 3, 'r'); Px.rect(p, 4, 12, 9, 1, 'w'); Px.rect(p, 7, 1, 1, 8, 'G'); Px.rect(p, 8, 1, 5, 3, 'y'); Px.rect(p, 2, 14, 12, 1, 'c'); });
+  // 무령왕릉 (2×2): 풀 덮인 둥근 무덤 앞에 벽돌로 쌓은 아치 입구
+  def('o_muryeong', 32, 32, p => {
+    Px.ellipse(p, 16, 17, 15, 12, 'e'); Px.ellipse(p, 14, 13, 10, 6, 'f'); Px.rect(p, 1, 26, 30, 5, 'n');
+    Px.rect(p, 9, 14, 14, 17, 'R'); Px.ellipse(p, 16, 14, 7, 5, 'R');
+    for (let y = 16; y < 31; y += 3) Px.rect(p, 9, y, 14, 1, 'b');
+    for (let y = 14; y < 31; y += 6) { p(12, y + 1, 'b'); p(19, y + 1, 'b'); p(15, y + 4, 'b'); }
+    Px.rect(p, 12, 19, 8, 12, 'k'); Px.ellipse(p, 16, 19, 4, 3, 'k');
+    Px.rect(p, 6, 28, 20, 3, 'l'); Px.rect(p, 7, 28, 18, 1, 'w');
+  });
   // 시간의 틈 (2×2)
   def('o_rift', 32, 32, p => { for (let r = 14; r > 0; r -= 3) Px.ellipse(p, 16, 16, r, r, r % 2 ? 'p' : 'P'); Px.ellipse(p, 16, 16, 3, 3, 'k'); });
   // 천막 가게 (2×1)
@@ -118,6 +136,6 @@ HG.Art.register(function (scene) {
   Object.assign(HG.OBJECTS, {
     bellhouse: { tex: 'o_bellhouse', w: 2, h: 2 }, kiln: { tex: 'o_kiln', w: 2, h: 1 }, raingauge: { tex: 'o_raingauge', w: 1, h: 1 },
     turtle: { tex: 'o_turtle', w: 2, h: 1 }, brick: { tex: 'o_brick', w: 2, h: 2 }, building: { tex: 'o_building', w: 2, h: 2 },
-    memorial: { tex: 'o_memorial', w: 2, h: 2 }, rift: { tex: 'o_rift', w: 2, h: 2 }, stall: { tex: 'o_stall', w: 2, h: 1 }
+    memorial: { tex: 'o_memorial', w: 2, h: 2 }, muryeong: { tex: 'o_muryeong', w: 2, h: 2 }, excav: { tex: 'o_excav', w: 1, h: 1 }, buoy: { tex: 'o_buoy', w: 1, h: 1 }, rift: { tex: 'o_rift', w: 2, h: 2 }, stall: { tex: 'o_stall', w: 2, h: 1 }
   });
 });

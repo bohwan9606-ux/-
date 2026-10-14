@@ -88,9 +88,12 @@
   const enc = HG.Region.enc;
 
   // ① 서라벌 (가운데)
-  const h = new B(24, 16, '.');
+  const h = new B(33, 16, '.');
   h.border('T');
-  h.rect(11, 0, 2, 16, ':').rect(0, 12, 24, 1, ':');
+  h.rect(11, 0, 2, 16, ':').rect(0, 12, 33, 1, ':');
+  // 동궁과 월지(안압지): 돌 테두리 9×9 안에 연못, 작은 섬 두 개
+  h.rect(23, 2, 9, 9, 'Q').rect(24, 3, 7, 7, '~');
+  h.set(26, 5, 'T').set(29, 7, 'T').set(28, 8, 'o');
   h.set(11, 15, 'T').set(12, 15, 'T');
   h.rect(3, 2, 6, 4, 'Q');
   h.rect(17, 13, 5, 2, ',');
@@ -104,8 +107,11 @@
       { kind: 'bellhouse', x: 15, y: 4, talk: ['커다란 종을 걸어 둘 종각이다.'] },
       { kind: 'cheom', x: 8, y: 8, talk: ['첨성대다. 삼국 시대부터 하늘을 살피던 곳이다.'] },
       { kind: 'sign', x: 10, y: 11, talk: ['→ 토함산 불국사 (동쪽)', '← 청해진 (서남쪽 바다)   ↑ 발해 (북쪽 끝)'] },
-      { kind: 'timemachine', x: 15, y: 9, smoke: true, talk: async ev => HG.Era.timeMachine(ev, HG.state.stamps.includes(ERA)) }
+      { kind: 'timemachine', x: 15, y: 9, smoke: true, talk: async ev => HG.Era.timeMachine(ev, HG.state.stamps.includes(ERA)) },
+      { kind: 'giwajip', x: 24, y: 1, talk: ['연못가에 세운 누각이다. 신라 왕실은 이곳에서 잔치를 열고 손님을 맞았다.'] },
+      { kind: 'sign', x: 22, y: 6, talk: ['동궁과 월지 (안압지)', '신라 왕궁 옆에 만든 아름다운 연못이다. 물에 비친 누각과 섬이 한 폭의 그림 같다.'] }
     ],
+    waterTalk: ['잔잔한 연못이다. 물고기가 노닌다.'],
     npcs: [
       R.npc('bell', 14, 6, 'right'),
       { id: 'official', sprite: 'us_official', x: 6, y: 7, dir: 'down', talk: ['신라 관리: 신라는 당나라와 힘을 합쳐 백제와 고구려를 무너뜨렸어.', '그 뒤 당나라가 한반도를 차지하려 하자 당나라 군대를 몰아내고 삼국을 통일했지(676년).'] },
@@ -114,7 +120,7 @@
     tileSecrets: { '21,3': { id: 'unifiedsilla_pine', item: ['meat', 2], fact: '통일 신라는 넓어진 땅을 9주로 나누고, 5소경이라는 작은 서울을 두어 다스렸어.' } },
     warps: [
       { x: 11, y: 0, to: 'us_balhae', tx: 10, ty: 12, dir: 'up' }, { x: 12, y: 0, to: 'us_balhae', tx: 11, ty: 12, dir: 'up' },
-      { x: 23, y: 12, to: 'us_bulguk', tx: 1, ty: 10, dir: 'right' },
+      { x: 32, y: 12, to: 'us_bulguk', tx: 1, ty: 10, dir: 'right' },
       { x: 0, y: 12, to: 'us_cheong', tx: 20, ty: 11, dir: 'left' }
     ],
     encounterRate: 0.06, encounter: enc([['dabotap', 50], ['bell', 50]], 15, 18),
@@ -137,14 +143,15 @@
       { kind: 'giwajip', x: 9, y: 3, talk: ['불국사의 대웅전이다. 부처님을 모신 큰 법당이다.'] },
       { kind: 'pagoda', x: 7, y: 5, talk: ['화려하고 복잡하게 쌓은 탑, 다보탑이다.'],
         secret: { id: 'unifiedsilla_dabo', mon: ['dabotap', 16], fact: '다보탑과 석가탑은 불국사 대웅전 앞에 마주 서 있어. 다보탑은 화려하고, 석가탑은 단정하지.' } },
-      { kind: 'pagoda', x: 14, y: 5, talk: ['단정하고 깔끔한 탑, 석가탑이다.', '탑 안에서 세계에서 가장 오래된 목판 인쇄물인 「무구정광대다라니경」이 나왔다고 한다.'] },
+      { kind: 'pagoda', x: 14, y: 5, talk: ['단정하고 깔끔한 탑, 석가탑이다.'],
+        secret: { id: 'unifiedsilla_dharani', mon: ['dharani', 17], fact: '1966년 석가탑을 고치다가 탑 안에서 두루마리 하나가 나왔어. 세계에서 가장 오래된 목판 인쇄물로 꼽히는 「무구정광대다라니경」이야.' } },
       { kind: 'sign', x: 15, y: 6, talk: ['↗ 토함산 석굴암', '돌을 다듬어 쌓아 만든 굴 안에 부처님을 모신 곳.'] },
       { kind: 'sign', x: 2, y: 9, talk: ['← 서라벌'] }
     ],
     npcs: [R.npc('bulguksa', 11, 8, 'down')],
     tileSecrets: { '17,5': { id: 'unifiedsilla_seokguram', item: ['meat', 2], fact: '석굴암은 돌을 다듬어 쌓은 인공 굴이야. 불국사와 함께 1995년 세계 유산이 되었어.' } },
     tileTalk: { '#': ['토함산의 바위 절벽이다. 이 너머에 석굴암이 있다.'] },
-    warps: [{ x: 0, y: 10, to: 'us_gyeong', tx: 22, ty: 12, dir: 'left' }],
+    warps: [{ x: 0, y: 10, to: 'us_gyeong', tx: 31, ty: 12, dir: 'left' }],
     encounterRate: 0.07, encounter: enc([['dabotap', 70], ['bell', 30]], 15, 18)
   };
 

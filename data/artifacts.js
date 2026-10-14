@@ -120,6 +120,12 @@ HG.ARTIFACTS = {
     learn: [[1, '쇠 내려치기'], [1, '철벽 방어'], [15, '쇠 두드리기']],
     dex: '가야는 철이 많이 나서 철로 갑옷과 무기를 만들었다. 덩이쇠를 만들어 다른 나라에 팔기도 했다.'
   },
+  jinmyosu: {
+    no: 18.5, name: '진묘수', era: 'threekingdoms', type: '돌', rare: true,
+    base: { hp: 80, atk: 80, def: 90, spd: 60 },
+    learn: [[1, '몸통박치기'], [1, '겁주기'], [15, '단단해지기']],
+    dex: '백제 무령왕릉의 무덤길 가운데에서 무덤을 지키던 돌짐승. 머리에 뿔이 하나 달린 상상의 동물로, 나쁜 기운을 막아 준다고 믿었다.'
+  },
   // ── 남북국
   dabotap: {
     no: 19, name: '다보탑', era: 'unifiedsilla', type: '돌', rare: false,
@@ -132,6 +138,18 @@ HG.ARTIFACTS = {
     base: { hp: 95, atk: 85, def: 80, spd: 50 },
     learn: [[1, '청동 울림'], [1, '번쩍 비추기'], [19, '단단해지기']],
     dex: '통일 신라 때 만든 큰 종. 소리가 맑고 아름다우며 「에밀레종」이라고도 불린다.'
+  },
+  juryeonggu: {
+    no: 20.3, name: '주령구', era: 'unifiedsilla', type: '흙', rare: true,
+    base: { hp: 80, atk: 80, def: 75, spd: 90 },
+    learn: [[1, '던지기'], [1, '겁주기'], [18, '지혜의 바람']],
+    dex: '경주 월지(안압지) 바닥에서 나온 14면체 나무 주사위. 면마다 「노래 한 곡 부르기」 같은 놀이 벌칙이 새겨져 있어 신라 사람들이 놀이를 즐겼음을 알 수 있다.'
+  },
+  dharani: {
+    no: 20.6, name: '무구정광대다라니경', era: 'unifiedsilla', type: '종이', rare: true,
+    base: { hp: 85, atk: 80, def: 85, spd: 65 },
+    learn: [[1, '먹물 튀기기'], [1, '기록하기'], [18, '지혜의 바람']],
+    dex: '불국사 석가탑 안에서 나온 두루마리 불경. 나무판에 글자를 새겨 찍은 것으로, 세계에서 가장 오래된 목판 인쇄물로 꼽힌다.'
   },
   // ── 고려
   celadon: {
@@ -224,4 +242,6 @@ HG.ARTIFACTS = {
     dex: '모든 시대를 어지럽힌 시간 괴물들의 우두머리.'
   }
 };
+// 도감 번호를 1부터 차례로 다시 매김 (중간에 새 유물을 넣어도 번호가 이어지게)
+Object.keys(HG.ARTIFACTS).filter(k => !HG.ARTIFACTS[k].hidden).sort((a, b) => HG.ARTIFACTS[a].no - HG.ARTIFACTS[b].no).forEach((k, i) => { HG.ARTIFACTS[k].no = i + 1; });
 HG.dexList = () => Object.keys(HG.ARTIFACTS).filter(k => !HG.ARTIFACTS[k].hidden).sort((a, b) => HG.ARTIFACTS[a].no - HG.ARTIFACTS[b].no);

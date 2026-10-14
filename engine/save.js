@@ -29,6 +29,14 @@ HG.Save = {
     for (const k in fresh) if (!(k in s)) s[k] = fresh[k];
     for (const k in fresh.stats) if (!(k in s.stats)) s.stats[k] = 0;
     for (const k in fresh.settings) if (!(k in s.settings)) s.settings[k] = fresh.settings[k];
+    // 예전에 찾은 길가 보물 동료 → ★★★ 국보급 동료로
+    if (HG.Secret && s.flags) Object.values(HG.Secret.ROADSIDE).forEach(l => l.forEach(sec => {
+      if (!s.flags['secret_' + sec.id] || !sec.mon) return;
+      const all = (s.party || []).concat(s.box || []);
+      if (all.some(m => m.national && m.species === sec.mon[0])) return;
+      const m = all.find(m => m.shiny && !m.national && m.species === sec.mon[0]);
+      if (m) m.national = true;
+    }));
     // if (s.version < 2) { ... 버전 2로 올릴 때 바꿀 내용 ... }
     s.version = HG.SAVE_VERSION;
     return s;

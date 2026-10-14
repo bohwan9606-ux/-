@@ -1,5 +1,5 @@
 // 엔딩 크레딧 — 현대로 돌아오고, 스승·유물·기록이 지나간 뒤 「한국사 박사」 칭호
-HG.CREDITS_MAKER = '박보환 선생님';
+HG.CREDITS_MAKER = '박봉두 선생님';
 HG.CreditsScene = class extends Phaser.Scene {
   constructor() { super('Credits'); }
   init(d) { this.onEnd = d.onEnd; }

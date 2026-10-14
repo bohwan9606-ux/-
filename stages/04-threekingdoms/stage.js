@@ -131,9 +131,12 @@
   bj.rect(6, 12, 18, 1, ':').rect(13, 5, 1, 7, ':').rect(7, 7, 6, 1, ':');
   bj.rect(16, 6, 5, 3, ',');
   bj.dots([[8, 3], [20, 3], [9, 14], [18, 14], [21, 10]], '"');
+  // 꽃밭 (무령왕릉은 백제 땅 꽃밭을 살펴보다 발견됨)
+  bj.rect(7, 13, 6, 2, 'h').rect(15, 13, 7, 2, 'h').rect(14, 9, 2, 2, 'h').rect(19, 9, 2, 2, 'h').rect(6, 2, 3, 3, 'h').rect(9, 8, 3, 1, 'h');
   HG.maps.tk_bj = {
     id: 'tk_bj', name: '백제 · 한성과 서해', music: 'field', tiles: bj.rows(),
     waterTalk: ['서해 바다다. 이 바닷길로 중국과 왜(일본)를 오갔다.'],
+    tileTalk: { 'h': ['들꽃이 가득 핀 꽃밭이다. 꽃 사이로 무언가 보일 것 같기도 하다…'] },
     objects: [
       { kind: 'giwajip', x: 11, y: 1, talk: ['백제 왕이 사는 궁궐이다.'] },
       { kind: 'pagoda', x: 18, y: 2, talk: ['날씬하고 아름다운 백제의 석탑이다.'],
@@ -165,7 +168,8 @@
     objects: [
       { kind: 'cheom', x: 6, y: 2, talk: ['돌을 둥글게 쌓아 올린 탑이 있다. 「첨성대」다.', '하늘의 별과 해, 달을 살피던 곳이라고 한다.'],
         secret: { id: 'threekingdoms_cheom', item: ['berry', 3], fact: '첨성대는 신라 선덕 여왕 때 세운 천문대야. 동양에서 지금까지 남아 있는 가장 오래된 천문대로 알려져 있어.' } },
-      { kind: 'tomb', x: 14, y: 2, talk: ['신라의 커다란 무덤이다.'] },
+      { kind: 'tomb', x: 14, y: 2, talk: ['신라의 커다란 무덤이다.'],
+        secret: { id: 'threekingdoms_geumgwan', item: ['meat', 2], fact: '1921년 경주에서 집을 짓던 중 땅속에서 금관이 나왔어. 그래서 그 무덤 이름이 「금관총」이 되었단다.' } },
       { kind: 'tomb', x: 18, y: 3, talk: ['커다란 무덤이다. 안에서 금관과 하늘을 나는 말 그림이 나왔다고 한다.'],
         secret: { id: 'threekingdoms_cheonma', mon: ['goldcrown', 13], fact: '경주 천마총에서는 금관과 하늘을 나는 말이 그려진 「천마도」가 나왔어.' } },
       { kind: 'giwajip', x: 4, y: 8, talk: ['신라 왕이 사는 궁궐이다.'] },

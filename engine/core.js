@@ -73,7 +73,8 @@ HG.state = null;
 HG.makeMon = function (species, level, opts) {
   opts = opts || {};
   const sp = HG.ARTIFACTS[species];
-  const m = { species: species, level: level, exp: HG.expFor(level), shiny: !!opts.shiny, moves: [], buffs: null };
+  const m = { species: species, level: level, exp: HG.expFor(level), shiny: !!opts.shiny || !!opts.national, moves: [], buffs: null };
+  if (opts.national) m.national = true;   // 국보급 발견 동료 (★★★, 능력치가 더 높음)
   m.moves = HG.movesAt(species, level);
   m.hp = HG.stat(m, 'hp');
   return m;
@@ -81,8 +82,8 @@ HG.makeMon = function (species, level, opts) {
 HG.expFor = lv => Math.floor(lv * lv * lv * 0.8);
 HG.stat = function (m, key) {
   const base = HG.ARTIFACTS[m.species].base[key];
-  const shinyBonus = m.shiny ? 1.1 : 1;
-  if (key === 'hp') return Math.floor((base * 2 * m.level) / 20 + m.level + 10);
+  const shinyBonus = m.national ? 1.25 : m.shiny ? 1.1 : 1;
+  if (key === 'hp') return Math.floor(((base * 2 * m.level) / 20 + m.level + 10) * (m.national ? 1.15 : 1));
   return Math.floor(((base * 2 * m.level) / 20 + 5) * shinyBonus);
 };
 HG.movesAt = function (species, level) {
@@ -90,7 +91,7 @@ HG.movesAt = function (species, level) {
   const ms = learn.filter(l => l[0] <= level).map(l => l[1]);
   return ms.slice(-4);
 };
-HG.monName = m => HG.ARTIFACTS[m.species].name + (m.shiny ? '★' : '');
+HG.monName = m => HG.ARTIFACTS[m.species].name + (m.national ? '★★★' : m.shiny ? '★' : '');
 
 // 칭호 주기
 HG.giveTitle = function (t) {

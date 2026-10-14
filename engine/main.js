@@ -67,8 +67,8 @@ HG.Dev = {
         const items = ['보물 자리 표시 ' + (HG.dev.showSecrets ? '끄기' : '켜기'), '길가 보물 확률 100% ' + (HG.Secret.CHANCE >= 1 ? '끄기 (5%로)' : '켜기'), '이 시대 숨은 보물 모두 다시 숨기기', '돌아가기'];
         const j = await HG.Dev.pick(scene, items, 4100);
         if (j === 0) { HG.dev.showSecrets = !HG.dev.showSecrets; scene.devMarks && scene.devMarks(); HG.UI.toast(scene, HG.dev.showSecrets ? '★ 못 찾은 보물 · ✓ 찾은 보물' : '보물 표시 끔'); }
-        if (j === 1) { HG.Secret.CHANCE = HG.Secret.CHANCE >= 1 ? 0.05 : 1; HG.Secret._lastSpot = null; HG.Secret._lastSteps = -99; HG.UI.toast(scene, HG.Secret.CHANCE >= 1 ? `길가 보물 100% (남은 것 ${left}개) · 나무·바위·물 앞에서 스페이스` : '길가 보물 5%'); }
-        if (j === 2) { HG.Secret.list(s.era).forEach(x => delete s.flags['secret_' + x.id]); scene.devMarks && scene.devMarks(); HG.UI.toast(scene, '이 시대 보물을 다시 숨겼어요'); }
+        if (j === 1) { HG.Secret.CHANCE = HG.Secret.CHANCE >= 1 ? 0.05 : 1; HG.Secret._checked = new Set(); HG.UI.toast(scene, HG.Secret.CHANCE >= 1 ? (left ? '길가 보물 100%\n' + HG.Secret.ROADSIDE[s.era].filter(x => !HG.Secret.found(x.id)).map(x => x.where).join('\n') : '이 시대 길가 보물은 이미 모두 찾았어요 (다시 숨기기로 되돌릴 수 있어요)') : '길가 보물 5%'); }
+        if (j === 2) { HG.Secret.list(s.era).forEach(x => delete s.flags['secret_' + x.id]); if (s.flags.placed && st && st.maps) s.flags.placed = s.flags.placed.filter(r => !st.maps.includes(r.map)); scene.devMarks && scene.devMarks(); HG.UI.toast(scene, '이 시대 보물을 다시 숨겼어요'); }
       }]);
       M.push(['엔딩 크레딧 보기', async () => { await HG.Dev.launch(scene, 'Credits', {}); }]);
     }

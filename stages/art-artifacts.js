@@ -194,6 +194,31 @@ HG.Art.register(function (scene) {
       Px.rect(p, 9, 8, 3, 1, 'k'); Px.rect(p, 11, 8, 1, 3, 'k'); Px.rect(p, 14, 8, 3, 3, 'k');
       eyes(p, 14, 20, 15);
     },
+    jinmyosu: p => {
+      Px.ellipse(p, 15, 21, 11, 6, 'g'); Px.ellipse(p, 14, 19, 8, 3, 'l');
+      [[6, 25], [11, 26], [18, 26], [23, 25]].forEach(([x, y]) => Px.rect(p, x, y, 3, 5, 'G'));
+      Px.ellipse(p, 23, 13, 6, 5, 'g'); Px.ellipse(p, 22, 12, 3, 2, 'l');
+      Px.poly(p, [[22, 8], [24, 1], [26, 8]], 'G');
+      Px.rect(p, 3, 17, 3, 2, 'G'); p(2, 16, 'G');
+      [[9, 20], [13, 22], [17, 20]].forEach(([x, y]) => p(x, y, 'G'));
+      eyes(p, 20, 25, 11); p(28, 15, 'k'); p(29, 15, 'k');
+    },
+    juryeonggu: p => {
+      Px.poly(p, [[16, 3], [27, 9], [27, 22], [16, 29], [5, 22], [5, 9]], 'n');
+      Px.poly(p, [[16, 3], [27, 9], [16, 14], [5, 9]], 'Y');
+      Px.poly(p, [[16, 14], [27, 9], [27, 22], [16, 29]], 'b');
+      Px.rect(p, 15, 14, 1, 15, 'B'); Px.rect(p, 6, 9, 10, 1, 'B'); Px.rect(p, 16, 9, 11, 1, 'B');
+      [[12, 7], [19, 7], [20, 19], [23, 15], [22, 24]].forEach(([x, y]) => { p(x, y, 'k'); p(x + 1, y, 'k'); p(x, y + 1, 'k'); });
+      eyes(p, 8, 12, 15); mouth(p, 9, 21);
+    },
+    dharani: p => {
+      Px.rect(p, 6, 8, 20, 17, 'Y'); Px.rect(p, 6, 8, 20, 1, 'l');
+      Px.rect(p, 3, 6, 4, 21, 'b'); Px.rect(p, 25, 6, 4, 21, 'b');
+      Px.rect(p, 4, 4, 2, 25, 'B'); Px.rect(p, 26, 4, 2, 25, 'B');
+      for (let x = 9; x < 24; x += 2) for (let y = 17; y < 24; y += 2) p(x, y, 'k');
+      Px.rect(p, 8, 10, 16, 6, 'Y');
+      eyes(p, 11, 18, 10); mouth(p, 14, 14);
+    },
     timeking: p => {
       Px.ellipse(p, 16, 18, 14, 12, 'p'); Px.ellipse(p, 16, 16, 10, 8, 'R');
       for (let x = 3; x < 30; x += 4) Px.poly(p, [[x, 8], [x + 2, 2], [x + 4, 8]], 'p');

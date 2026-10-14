@@ -41,6 +41,7 @@ HG.WorldScene = class extends Phaser.Scene {
     // 물건
     this.objects = [];
     (M.objects || []).forEach(o => this.addObject(o));
+    HG.Secret.placedFor(M.id).forEach(o => this.addObject(o));
     // 사람
     this.npcs = [];
     (M.npcs || []).forEach(n => { if (!n.when || n.when(this.ev)) this.addNpc(n); });
@@ -301,8 +302,9 @@ HG.WorldScene = class extends Phaser.Scene {
     // 물·벽화 같은 땅 앞
     const ch = this.tileAt(fx, fy), t = HG.TILES[ch];
     const sec = (this.map.tileSecrets && this.map.tileSecrets[fx + ',' + fy]) || HG.Secret.roadside(fx + ',' + fy + '@' + this.map.id, ch);
+    if (!sec && HG.Secret.CHANCE >= 1 && HG.dev && HG.dev.on) HG.UI.toast(this, HG.Secret.whereLeft());
     const def = HG.TILE_TALK[ch];
-    const lines = (this.map.tileTalk && this.map.tileTalk[ch]) || (t && t.water && this.map.waterTalk) || (def && [HG.pick(def)]);
+    const lines = sec && sec.roadside ? null : (this.map.tileTalk && this.map.tileTalk[ch]) || (t && t.water && this.map.waterTalk) || (def && [HG.pick(def)]);
     if (lines || sec) await this.runEvent(async ev => { if (lines) await ev.say(...lines); if (sec) await HG.Secret.check(ev, sec); });
   }
 
