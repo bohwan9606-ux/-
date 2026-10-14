@@ -2,10 +2,32 @@
 HG.Era = {
   next(id) { const i = HG.eraIndex(id); return HG.ERAS[i + 1]; },
 
+  // 가 본 시대 중 가장 나중 시대 번호 (예전 기록은 인장·지금 시대로 계산)
+  furthest() {
+    const s = HG.state; if (!s) return 0;
+    const fromStamps = Math.max(-1, ...s.stamps.map(id => HG.eraIndex(id))) + 1;
+    return Math.min(HG.ERAS.length - 1, Math.max(s.flags.maxEra || 0, HG.eraIndex(s.era), fromStamps));
+  },
+
+  // 타임머신: 가 본 시대 사이를 자유롭게 오가기
+  async travel(ev) {
+    const s = HG.state, max = HG.Era.furthest();
+    const list = HG.ERAS.slice(0, max + 1).filter(e => HG.stages[e.id] && e.id !== s.era);
+    if (!list.length) { await ev.say('할아버지: 아직 다른 시대에 가 본 적이 없구나.'); return; }
+    const names = list.map(e => e.name + (s.stamps.includes(e.id) ? ' ✔' : ''));
+    const i = await ev.choose('어느 시대로 갈까? (✔ 시간 조각을 되찾은 시대)', names.concat(['그만두기']), list.length);
+    if (i < 0 || i >= list.length) return;
+    const to = list[i];
+    await ev.say(`할아버지(무전기): ${to.name} 시대로 출발! 언제든 타임머신으로 다시 돌아올 수 있단다.`);
+    HG.Era.enter(ev.scene, to.id);
+    return 'gone';
+  },
+
   // 다음 시대로 들어가기 (scene: 지금 장면)
   enter(scene, eraId) {
     const s = HG.state, st = HG.stages[eraId], era = HG.ERAS.find(e => e.id === eraId);
     s.era = eraId;
+    s.flags.maxEra = Math.max(HG.Era.furthest(), HG.eraIndex(eraId));
     s.flags.outfit = era.outfit || s.flags.outfit;
     // 유물 진화
     const evo = [];
@@ -60,9 +82,9 @@ HG.Era = {
   // 타임머신 메뉴 (모든 시대 공용). cleared: 이 시대 인장을 받았는지
   async timeMachine(ev, cleared) {
     const s = HG.state;
-    const items = ['동료 쉬게 하기', '동료 바꾸기', '유물 박물관', '기록 저장', '다음 시대로', '그만두기'];
+    const items = ['동료 쉬게 하기', '동료 바꾸기', '유물 박물관', '기록 저장', '다음 시대로', '다른 시대로 가기', '그만두기'];
     while (true) {
-      const i = await ev.choose('타임머신이다. 무엇을 할까?', items, 5);
+      const i = await ev.choose('타임머신이다. 무엇을 할까?', items, 6);
       if (i === 0) { if (!s.party.length) { await ev.say('아직 동료가 없다.'); continue; } ev.heal(); await ev.say('동료들이 모두 기운을 되찾았다!'); }
       else if (i === 1) await ev.menu('swap');
       else if (i === 2) await ev.menu('museum');
@@ -74,6 +96,7 @@ HG.Era = {
         if (r === 'go') { HG.Era.enter(ev.scene, HG.Era.next(s.era).id); return 'gone'; }
         ev.setFlag('sawNextEra');
       }
+      else if (i === 5) { if (await HG.Era.travel(ev) === 'gone') return 'gone'; }
       else return;
     }
   },

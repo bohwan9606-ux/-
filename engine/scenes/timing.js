@@ -31,11 +31,12 @@ HG.TimingScene = class extends Phaser.Scene {
     HG.UI.text(this, HG.W / 2, HG.H - 14, '바늘이 초록 칸에 오면 스페이스!', { depth: 101, small: true, color: '#e9e2d0', stroke: '#1a1410' }).setOrigin(0.5, 0);
     let ok = 0, miss = 0;
     while (ok < p.rounds) {
-      const zw = Math.max(12, Math.round(p.zone * 0.78) - ok * 3);
+      // 난이도 낮춤(약 10 → 6): 초록 칸 넓게, 라운드마다 덜 좁아짐
+      const zw = Math.max(16, Math.round(p.zone * 0.95) - ok * 2);
       const zx = bx + HG.rand(20, bw - zw - 20);
       prog.setText(`${p.act}  ${ok} / ${p.rounds}`);
       const hit = await new Promise(res => {
-        let t = 0, dir = 1, x = bx; const sp = (p.speed * 1.2 + ok * 0.2) * bw;
+        let t = 0, dir = 1, x = bx; const sp = (p.speed * 0.95 + ok * 0.12) * bw;   // 바늘 속도 느리게
         const draw = () => {
           g.clear();
           g.fillStyle(0x1a1410).fillRect(bx - 2, by - 2, bw + 4, 14);
@@ -62,7 +63,7 @@ HG.TimingScene = class extends Phaser.Scene {
         if (this.art) this.tweens.add({ targets: this.art, scaleY: this.art.scaleY * 1.08, yoyo: true, duration: 100 });
       } else {
         miss++; HG.Sound.sfx('wrong'); this.cameras.main.shake(120, 0.006); this.flash('앗, 빗나갔다!', '#bf4436');
-        if (miss >= 4) { await HG.UI.wait(this, 450); await this.dlg.say('네 번이나 빗나갔다! 처음부터 다시 해 보자.'); ok = 0; miss = 0; if (this.art && p.art) this.art.setTexture(p.art + '0'); continue; }
+        if (miss >= 6) { await HG.UI.wait(this, 450); await this.dlg.say('여섯 번이나 빗나갔다! 처음부터 다시 해 보자.'); ok = 0; miss = 0; if (this.art && p.art) this.art.setTexture(p.art + '0'); continue; }
       }
       await HG.UI.wait(this, 450);
     }
@@ -84,7 +85,7 @@ HG.TimingScene = class extends Phaser.Scene {
       await this.flash(`${round}판!`, '#e3d49a', true);
       const r = await new Promise(res => {
         let v = 0.5, left = p.mashTime || 10;
-        const cpu = 0.15 + round * 0.025;
+        const cpu = 0.10 + round * 0.015;   // 상대 힘 약하게 (난이도 약 10 → 6)
         const draw = () => {
           g.clear();
           g.fillStyle(0x1a1410).fillRect(58, 126, 204, 14);
@@ -98,7 +99,7 @@ HG.TimingScene = class extends Phaser.Scene {
           left -= 0.016; v -= cpu * 0.016; draw();
           if (v <= 0 || v >= 1 || left <= 0) { ev.remove(); this.keys.pop(h); res(v >= 0.5); }
         } });
-        const h = this.keys.push(a => { if (a === 'ok') { v += 0.028; HG.Sound.sfx('talk'); } });
+        const h = this.keys.push(a => { if (a === 'ok') { v += 0.033; HG.Sound.sfx('talk'); } });
       });
       g.clear(); tl.setText('');
       if (r) { wins++; HG.Sound.sfx('correct'); this.tweens.add({ targets: foe, angle: 80, duration: 300, yoyo: true }); await this.flash('이겼다!', '#e3d49a', true); }
