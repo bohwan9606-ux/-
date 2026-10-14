@@ -54,9 +54,19 @@ HG.Touch = {
     // 길게 눌렀을 때 뜨는 메뉴, 두 번 탭 확대 막기
     document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.tc, #game')) e.preventDefault(); });
     document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+    // 연타 중: 화면(방향 버튼·A·B·메뉴 버튼 말고) 어디를 눌러도 스페이스 한 번
+    document.addEventListener('pointerdown', e => {
+      if (!this.mash || (e.target.closest && e.target.closest('.tc, #tc-rotate, form'))) return;
+      e.preventDefault(); this.key('Space', true); setTimeout(() => this.key('Space', false), 25);
+    }, { passive: false });
     // 이미 만들어진 글자도 버튼 이름으로
     if (HG.game) HG.game.scene.getScenes(true).forEach(sc => sc.children && sc.children.list.forEach(o => { if (o.type === 'Text') o.setText(HG.Touch.label(o.text)); }));
   },
+
+  // 연타 게임(씨름·막집 짓기 등) 동안에는 화면 아무 곳이나 톡톡 쳐도 A(스페이스)로 인정
+  mash: false,
+  mashOn() { this.mash = true; },
+  mashOff() { this.mash = false; },
 
   // 키 신호 보내기
   key(code, down) {

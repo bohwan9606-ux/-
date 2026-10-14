@@ -39,6 +39,7 @@ HG.BuildScene = class extends Phaser.Scene {
   init(data) { this.onEnd = data.onEnd; this.p = Object.assign({}, HG.BUILD_DEFAULT, data.p || {}); }
 
   create() {
+    this.events.once("shutdown", () => { if (HG.Touch) HG.Touch.mashOff(); });
     this.keys = new HG.Keys(this);
     this.dlg = new HG.UI.Dialog(this, this.keys);
     const p = this.p;
@@ -127,7 +128,9 @@ HG.BuildScene = class extends Phaser.Scene {
     return new Promise(res => {
       const objs = [];
       objs.push(HG.UI.box(this, 60, 128, 200, 40, 100));
-      objs.push(HG.UI.text(this, HG.W / 2, 134, `스페이스 연타! ${label}`, { depth: 101 }).setOrigin(0.5, 0));
+      const touch = HG.Touch && HG.Touch.on;
+      objs.push(HG.UI.text(this, HG.W / 2, 134, touch ? `화면을 톡톡! ${label}` : `스페이스 연타! ${label}`, { depth: 101 }).setOrigin(0.5, 0));
+      if (HG.Touch) HG.Touch.mashOn();
       const bar = this.add.graphics().setDepth(101); objs.push(bar);
       let v = 0; const need = 12;
       const decay = this.time.addEvent({ delay: 100, loop: true, callback: () => { v = Math.max(0, v - 0.35); draw(); } });
@@ -137,7 +140,7 @@ HG.BuildScene = class extends Phaser.Scene {
         if (act !== 'ok') return;
         v++; HG.Sound.sfx('hit'); draw();
         this.tweens.add({ targets: this.site, x: 160 + (v % 2 ? 2 : -2), yoyo: true, duration: 50 });
-        if (v >= need) { decay.remove(); this.keys.pop(h); objs.forEach(o => o.destroy()); res(); }
+        if (v >= need) { decay.remove(); this.keys.pop(h); objs.forEach(o => o.destroy()); if (HG.Touch) HG.Touch.mashOff(); res(); }
       });
     });
   }

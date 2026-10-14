@@ -9,6 +9,7 @@ HG.TimingScene = class extends Phaser.Scene {
     this.p = Object.assign({ mode: 'timing', title: '타이밍', rounds: 4, speed: 1.2, zone: 34, exp: 30, bg: 'village', music: 'mission', intro: [], outro: [], act: '스페이스!' }, d.p || {});
   }
   create() {
+    this.events.once("shutdown", () => { if (HG.Touch) HG.Touch.mashOff(); });
     const p = this.p;
     this.keys = new HG.Keys(this); this.dlg = new HG.UI.Dialog(this, this.keys);
     HG.miniBg(this, p.bg);
@@ -78,7 +79,7 @@ HG.TimingScene = class extends Phaser.Scene {
     await this.dlg.say(...p.intro);
     const g = this.add.graphics().setDepth(100);
     const tl = HG.UI.text(this, HG.W / 2, 148, '', { depth: 101, color: '#e9e2d0', stroke: '#1a1410' }).setOrigin(0.5, 0);
-    HG.UI.text(this, HG.W / 2, HG.H - 14, '스페이스를 빠르게 연타!', { depth: 101, small: true, color: '#e9e2d0', stroke: '#1a1410' }).setOrigin(0.5, 0);
+    HG.UI.text(this, HG.W / 2, HG.H - 14, HG.Touch && HG.Touch.on ? '화면 아무 곳이나 빠르게 톡톡!' : '스페이스를 빠르게 연타!', { depth: 101, small: true, color: '#e9e2d0', stroke: '#1a1410' }).setOrigin(0.5, 0);
     let wins = 0, round = 0;
     while (wins < 2 && round < 3) {
       round++;
@@ -97,9 +98,10 @@ HG.TimingScene = class extends Phaser.Scene {
         };
         const ev = this.time.addEvent({ delay: 16, loop: true, callback: () => {
           left -= 0.016; v -= cpu * 0.016; draw();
-          if (v <= 0 || v >= 1 || left <= 0) { ev.remove(); this.keys.pop(h); res(v >= 0.5); }
+          if (v <= 0 || v >= 1 || left <= 0) { ev.remove(); this.keys.pop(h); if (HG.Touch) HG.Touch.mashOff(); res(v >= 0.5); }
         } });
         const h = this.keys.push(a => { if (a === 'ok') { v += 0.033; HG.Sound.sfx('talk'); } });
+        if (HG.Touch) HG.Touch.mashOn();
       });
       g.clear(); tl.setText('');
       if (r) { wins++; HG.Sound.sfx('correct'); this.tweens.add({ targets: foe, angle: 80, duration: 300, yoyo: true }); await this.flash('이겼다!', '#e3d49a', true); }
