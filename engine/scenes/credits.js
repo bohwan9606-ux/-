@@ -105,11 +105,59 @@ HG.CreditsScene = class extends Phaser.Scene {
     await HG.UI.wait(this, 400);
     HG.UI.text(this, 160, yy + 30, `칭호 「${sc.grade}」 · 「${sc.title}」`, { depth: 21, color: '#e3d49a' }).setOrigin(0.5, 0);
     HG.UI.text(this, 160, yy + 45, '지식을 많이 쌓을수록 점수가 높아져요!', { depth: 21, small: true, color: '#b3ac9c' }).setOrigin(0.5, 0);
-    const end = HG.UI.text(this, 160, 178, 'THE END  —  스페이스를 누르세요', { depth: 21, small: true, color: '#e9e2d0' }).setOrigin(0.5, 1);
+    const end = HG.UI.text(this, 160, 178, `X: 점수 카드 저장  ·  스페이스: 끝`, { depth: 21, small: true, color: '#e9e2d0' }).setOrigin(0.5, 1);
     this.tweens.add({ targets: end, alpha: 0.3, yoyo: true, repeat: -1, duration: 500 });
-    await new Promise(r => { const h = this.keys.push(a => { if (a === 'ok') { this.keys.pop(h); r(); } }); });
+    // 점수 카드를 그림 파일로 저장 (웨일 팀보드·클래스에 올리기용)
+    const save = () => HG.saveScoreCard(this, [end, btn], s.player.name);
+    const btn = HG.cardButton(save);
+    this.events.once('shutdown', () => btn.remove());
+    await new Promise(r => { const h = this.keys.push(a => {
+      if (a === 'cancel') { save(); return; }
+      if (a === 'ok') { this.keys.pop(h); r(); }
+    }); });
+    btn.remove();
     HG.Sound.stop();
     this.cameras.main.fadeOut(400); await HG.UI.wait(this, 420);
     const cb = this.onEnd; this.onEnd = null; if (cb) cb('done');
   }
+};
+
+// ── 점수 카드 저장 ──
+// 화면을 찍어 3배로 키우고, 아래에 게임 이름·날짜를 붙여 PNG로 내려받기
+HG.cardButton = function (onClick) {
+  const b = document.createElement('button');
+  b.textContent = '📷 점수 카드 저장';
+  b.style.cssText = 'position:fixed;z-index:20;right:12px;top:12px;font:700 15px Galmuri11,sans-serif;padding:8px 16px;border:3px solid #1a1410;border-radius:6px;background:#dcbc48;color:#1a1410;cursor:pointer;';
+  b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); onClick(); });
+  document.body.appendChild(b);
+  return b;
+};
+HG.saveScoreCard = function (scene, hide, name) {
+  if (HG._savingCard) return; HG._savingCard = true;
+  const objs = hide.filter(o => o && o.setVisible);
+  objs.forEach(o => o.setVisible(false));
+  const btnEl = hide.find(o => o && o.style); if (btnEl) btnEl.style.visibility = 'hidden';
+  scene.game.renderer.snapshot(img => {
+    objs.forEach(o => o.setVisible(true)); if (btnEl) btnEl.style.visibility = '';
+    const k = 3, W = HG.W * k, H = HG.H * k, foot = 36;
+    const c = document.createElement('canvas'); c.width = W; c.height = H + foot;
+    const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+    x.drawImage(img, 0, 0, W, H);
+    x.fillStyle = '#1a1410'; x.fillRect(0, H, W, foot);
+    const d = new Date(), ds = `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
+    x.fillStyle = '#e3d49a'; x.font = '20px Galmuri11, sans-serif'; x.textBaseline = 'middle';
+    x.fillText('시간 조각 대모험', 14, H + foot / 2);
+    x.textAlign = 'right'; x.fillStyle = '#b3ac9c'; x.fillText(ds, W - 14, H + foot / 2);
+    const fname = `time-keeper-card_${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}.png`;
+    c.toBlob(blob => {
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.download = fname; a.href = url;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }, 'image/png');
+    HG.Sound.sfx('item');
+    const t = HG.UI.text(scene, 160, 168, '저장했어요! 팀보드에 올려 보세요', { depth: 30, small: true, color: '#ffe14a', stroke: '#1a1410' }).setOrigin(0.5, 1);
+    scene.time.delayedCall(1800, () => t.destroy());
+    setTimeout(() => { HG._savingCard = false; }, 600);
+  });
 };
