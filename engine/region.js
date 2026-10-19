@@ -49,7 +49,7 @@ HG.Region = {
       await ev.say(...b.win);
       if (b.reward && b.reward.mon) { const [sp, lv] = b.reward.mon, nm = HG.ARTIFACTS[sp].name; ev.addMon(sp, lv); HG.Sound.sfx('levelup'); await ev.say(`${nm}${HG.josa(nm, '이', '가')} 동료가 되었다!` + (b.reward.text ? ` (${b.reward.text})` : '')); }
       await HG.Era.award(ev, b.stamp);
-      if (b.final) { await ev.say(...(b.finalLines || [])); await ev.scene.overlay('Credits', {}); return; }
+      if (b.final) { await ev.say(...(b.finalLines || [])); await ev.scene.overlay('Credits', {}); if (HG.Honor) await HG.Honor.invite(ev); return; }
       await ev.say(`할아버지(무전기): 시간 조각이 돌아왔구나! ${spec.place}의 타임머신으로 오렴!`);
     }
 

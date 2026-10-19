@@ -94,12 +94,16 @@
   f.rect(4, 11, 5, 2, '~').rect(3, 11, 1, 2, 's').rect(9, 11, 1, 2, 's').rect(4, 13, 5, 1, 's');
   f.dots([[16, 9], [11, 13], [22, 12], [25, 11], [8, 21], [20, 22]], 'o');
   f.dots([[1, 1], [2, 1], [27, 1], [28, 1], [12, 1], [15, 1]], 'T');
+  f.rect(13, 0, 2, 2, ':');   // 북쪽 길 (엔딩 뒤 「시간의 꽃길」로 이어짐)
   f.dots([[16, 5], [12, 7], [16, 17], [11, 11], [24, 13], [19, 11], [6, 14], [15, 21]], '"');
   HG.maps.field = {
     id: 'field', name: '사냥터 들판', music: 'field', tiles: f.rows(),
     waterTalk: ['작은 연못이다. 짐승 발자국이 잔뜩 찍혀 있다.'],
     objects: [
-      { kind: 'sign', x: 12, y: 2, talk: ['↑ 북쪽 길', '시간 안개가 자욱해서 지나갈 수 없다…', '(시간 조각을 더 모으면 열릴지도?)'] },
+      { kind: 'sign', x: 12, y: 2, talk: async ev => {
+        if (HG.Honor && HG.Honor.open()) await ev.say('↑ 북쪽 길 · 시간의 꽃길', '시간 안개가 걷혔다! 시간 조각을 모두 되찾은 시간 지킴이를 위한 길이 열렸다.');
+        else await ev.say('↑ 북쪽 길', '시간 안개가 자욱해서 지나갈 수 없다…', '(시간 조각을 더 모으면 열릴지도?)');
+      } },
       { kind: 'bush', x: 16, y: 13, talk: ['열매 덤불이다. 새들이 열매를 쪼아 먹고 있다.'] }
     ],
     npcs: [
@@ -110,6 +114,20 @@
       } }
     ],
     warps: [{ x: 13, y: 23, to: 'village', tx: 13, ty: 1, dir: 'down' }, { x: 14, y: 23, to: 'village', tx: 14, ty: 1, dir: 'down' }],
+    triggers: [{ x: 13, y: 0, w: 2, h: 2, run: async ev => {
+      if (HG.Honor && HG.Honor.open()) { await ev.warp('honor', ev.state.player.x === 13 ? 10 : 11, HG.maps.honor.tiles.length - 2, 'up'); return; }
+      await ev.say('시간 안개가 자욱해서 앞이 보이지 않는다…', '(시간 조각을 모두 모으면 열릴지도?)');
+      await ev.stepPlayer('down'); if (ev.state.player.y < 2) await ev.stepPlayer('down');
+    } }],
+    onEnter: async ev => {
+      // 아직 닫혀 있으면 북쪽 길에 시간 안개
+      if (HG.Honor && HG.Honor.open()) return;
+      const S = ev.scene;
+      for (let i = 0; i < 14; i++) {
+        const c = S.add.ellipse(13 * HG.T + HG.rand(-14, 46), HG.rand(0, 40), HG.rand(18, 30), HG.rand(10, 16), 0xe9e2d0, 0.55).setDepth(800);
+        S.tweens.add({ targets: c, x: c.x + HG.rand(-8, 8), alpha: 0.3, duration: HG.rand(1400, 2400), yoyo: true, repeat: -1 });
+      }
+    },
     encounterRate: 0.07,
     encounter: (x, y) => {
       const deep = y <= 10;
