@@ -346,10 +346,10 @@
         this.time.delayedCall(60000, () => { if (!this.over) { this.legend.setText('힌트: 왼쪽 위 ☰ · 오른쪽 위 ☵ · 왼쪽 아래 ☲ · 오른쪽 아래 ☷'); this.legend.setColor('#e3d49a'); } });
         this.input2(a => {
           if (D4[a]) {
-            const [dx, dy] = D4[a], cur = this.slots[this.ci];
-            let best = -1, bd = 1e9;
-            this.slots.forEach((s, i) => { if (i === this.ci) return; const vx = s.x - cur.x, vy = s.y - cur.y; if (vx * dx + vy * dy <= 0) return; const d = Math.abs(vx) + Math.abs(vy) + (dx ? Math.abs(vy) : Math.abs(vx)) * 2; if (d < bd) { bd = d; best = i; } });
-            if (best >= 0) { this.ci = best; HG.Sound.sfx('cursor'); this.drawAll(); }
+            // 자리 옮기기: 귀퉁이에서 가운데 쪽(← →)으로 누르면 태극으로 돌아옴 (0 태극 · 1 왼위 · 2 오른위 · 3 왼아래 · 4 오른아래)
+            const NAV = { 0: { left: 1, right: 2, up: 1, down: 3 }, 1: { right: 0, down: 3 }, 2: { left: 0, down: 4 }, 3: { right: 0, up: 1 }, 4: { left: 0, up: 2 } };
+            const best = (NAV[this.ci] || {})[a];
+            if (best !== undefined) { this.ci = best; HG.Sound.sfx('cursor'); this.drawAll(); }
           }
           if (a === 'ok') {
             const s = this.slots[this.ci]; this.presses++;
