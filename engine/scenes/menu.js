@@ -128,8 +128,16 @@ HG.MenuScene = class extends Phaser.Scene {
             if (!s.caught[id]) img.setTint(0x1a1410);
             this.L(HG.UI.text(this, x + 44, y + 47, A.name, { depth: 12, small: true }).setOrigin(0.5, 0));
             if (s.caught[id + '_s']) this.L(HG.UI.text(this, x + 82, y + 3, '★', { depth: 12, small: true, color: '#f08a2a' }).setOrigin(1, 0));
+          } else if (HG.dexHint(id).open) {
+            // 아직 못 만난 유물: 이미 가 본 시대면 실루엣 + 초성 + 시대 힌트
+            const h = HG.dexHint(id);
+            this.L(this.add.image(x + 44, y + 22, 'mon_' + id).setScale(0.8).setDepth(12).setTint(0x1a1410).setAlpha(0.55));
+            this.L(HG.UI.text(this, x + 44, y + 37, h.cho, { depth: 12, small: true, color: '#6b4a2b' }).setOrigin(0.5, 0));
+            this.L(HG.UI.text(this, x + 44, y + 49, h.where, { depth: 12, small: true, color: h.national ? '#a4462e' : '#8a8478' }).setOrigin(0.5, 0));
           } else {
-            this.L(HG.UI.text(this, x + 44, y + 22, '?', { depth: 12, color: '#8a8478' }).setOrigin(0.5, 0));
+            // 아직 안 간 시대: 물음표 + 시대 이름만
+            this.L(HG.UI.text(this, x + 44, y + 16, '?', { depth: 12, color: '#8a8478' }).setOrigin(0.5, 0));
+            this.L(HG.UI.text(this, x + 44, y + 44, HG.dexHint(id).era + '에서', { depth: 12, small: true, color: '#8a8478' }).setOrigin(0.5, 0));
           }
         });
         if (pg < pages - 1) this.L(HG.UI.text(this, HG.W / 2, 166, '▼', { depth: 12, small: true, color: '#6b4a2b' }).setOrigin(0.5, 0));
@@ -209,7 +217,20 @@ HG.MenuScene = class extends Phaser.Scene {
   }
   async dexDetail(id) {
     const s = HG.state.dex, A = HG.ARTIFACTS[id];
-    if (!s.seen[id] && !s.caught[id]) { HG.Sound.sfx('wrong'); return; }
+    if (!s.seen[id] && !s.caught[id]) {
+      // 못 만난 유물: 힌트 화면
+      const h = HG.dexHint(id);
+      this.page('No.' + String(A.no).padStart(3, '0') + '  ' + (h.open ? h.cho : '???'));
+      if (h.open) this.L(this.add.image(60, 74, 'mon_' + id).setScale(2).setDepth(11).setTint(0x1a1410).setAlpha(0.55));
+      else this.L(HG.UI.text(this, 60, 62, '?', { depth: 11, color: '#8a8478' }).setOrigin(0.5, 0).setScale(2));
+      this.L(HG.UI.text(this, 24, 130, h.era + ' 시대', { depth: 11, small: true }));
+      const msg = !h.open ? `아직 가 보지 않은 ${h.era} 시대에서 만날 수 있어요. 타임머신으로 그 시대까지 가 보자!`
+        : h.national ? `국보급 유물! ${h.era} 시대 길가 어딘가에 숨어 있어요. 꽃밭, 나무, 바위, 물가 같은 곳을 꼼꼼히 살펴보자.`
+        : `아직 만나지 못한 유물이에요. 이름의 첫소리는 「${h.cho}」. ${h.era} 시대의 풀숲을 걷거나, 사람들을 돕거나, 반짝이는 곳을 살펴보자!`;
+      this.L(HG.UI.text(this, 112, 32, msg, { depth: 11, wrap: 190, lineSpacing: 5 }));
+      await this.waitKey();
+      return;
+    }
     this.page('No.' + String(A.no).padStart(3, '0') + '  ' + A.name);
     const img = this.L(this.add.image(60, 74, 'mon_' + id).setScale(2).setDepth(11));
     if (!s.caught[id]) img.setTint(0x1a1410);
@@ -390,4 +411,17 @@ HG.MenuScene = class extends Phaser.Scene {
       else { HG.Sound.sfx('wrong'); }
     }
   }
+};
+
+// ── 도감 힌트: 초성 · 시대 · 국보 여부
+HG.chosung = function (str) {
+  const C = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  return [...str].map(ch => { const c = ch.charCodeAt(0) - 0xac00; return c >= 0 && c < 11172 ? C[Math.floor(c / 588)] : ch; }).join('');
+};
+HG.NATIONAL_ONLY = ['jinmyosu', 'juryeonggu'];   // 길가 국보로만 얻는 유물
+HG.dexHint = function (id) {
+  const A = HG.ARTIFACTS[id], e = HG.ERAS.find(x => x.id === A.era) || { short: '', id: '' };
+  const open = HG.eraIndex(A.era) <= HG.Era.furthest();
+  const national = HG.NATIONAL_ONLY.includes(id);
+  return { cho: HG.chosung(A.name), era: e.short, open, national, where: national ? '길가 어딘가' : e.short };
 };
