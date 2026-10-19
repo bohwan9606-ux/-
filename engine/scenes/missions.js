@@ -74,7 +74,7 @@
         x = fromLeft ? -10 : HG.rand(20, HG.W - 20); y = fromLeft ? HG.rand(t.y - 30, t.y + 10) : -10;
       }
       const m = this.add.image(x, y, 'tmon0').setDepth(15);
-      m.t = t; m.speed = 26 + (this.p.time - this.left) * 1.1;
+      m.t = t; m.speed = 26 + (this.p.time - this.left) * 0.75;   // 끝으로 갈수록 빨라짐 (난이도 약 10 → 7.5)
       this.mons.push(m);
     }
     pulse() {
@@ -98,7 +98,7 @@
       this.left -= dt; this.cool -= dt;
       if (this.left <= 0) { this.left = 0; this.upd(); return this.end(); }
       this.upd(); this.drawRing();
-      this.spawnT -= dt; if (this.spawnT <= 0) { this.spawnT = Math.max(0.42, 1.0 - (this.p.time - this.left) * 0.02); this.spawn(); if (this.p.time - this.left > this.p.time * 0.5 && Math.random() < 0.3) this.spawn(); }
+      this.spawnT -= dt; if (this.spawnT <= 0) { this.spawnT = Math.max(0.6, 1.05 - (this.p.time - this.left) * 0.016); this.spawn(); if (this.p.time - this.left > this.p.time * 0.5 && Math.random() < 0.2) this.spawn(); }
       this.mons = this.mons.filter(m => {
         if (!this.on) return false;
         const tx = m.t.x, ty = m.t.y - 8;
