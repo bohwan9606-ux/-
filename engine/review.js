@@ -5,13 +5,13 @@
 // ▼ 설문 설정: 구글 폼의 「미리 채워진 링크」에서 주소와 entry 번호를 옮겨 적기
 //   url이 비어 있으면 후기 화면은 나오지 않음
 HG.REVIEW_FORM = {
-  url: '',                 // 예: 'https://docs.google.com/forms/d/e/1FAIpQL.../viewform'
+  url: 'https://docs.google.com/forms/d/e/1FAIpQLScrSYIksCBdev5v-_T1FY7O8ZdOpSAeQBOA8S9oVAhpnbYgiw/viewform',
   entries: {
-    stars: '',             // 예: 'entry.1111111'  (별점)
-    era: '',               // 가장 재미있던 시대
-    grade: '',             // 학년
-    comment: '',           // 한마디
-    record: ''             // 게임 기록 (도감·점수·플레이 시간)
+    stars: 'entry.741909844',             // 예: 'entry.1111111'  (별점)
+    era: 'entry.39974287',               // 가장 재미있던 시대
+    grade: 'entry.169427911',             // 학년
+    comment: 'entry.1863034469',           // 한마디
+    record: 'entry.1195264844'             // 게임 기록 (도감·점수·플레이 시간)
   }
 };
 
