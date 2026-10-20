@@ -116,6 +116,8 @@ HG.CreditsScene = class extends Phaser.Scene {
       if (a === 'ok') { this.keys.pop(h); r(); }
     }); });
     btn.remove();
+    // 개발자에게 후기 보내기 (설문 주소가 설정돼 있을 때만)
+    if (HG.Review) await HG.Review.ask(this, this.keys, this.dlg);
     HG.Sound.stop();
     this.cameras.main.fadeOut(400); await HG.UI.wait(this, 420);
     const cb = this.onEnd; this.onEnd = null; if (cb) cb('done');
