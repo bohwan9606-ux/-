@@ -415,6 +415,7 @@ HG.WorldScene = class extends Phaser.Scene {
           S.player.setVisible(true);
           await S.dlg.say('눈앞이 캄캄해졌다…', '…타임머신 옆에서 정신을 차렸다. 동료들도 다시 기운을 되찾았다.');
           HG.state.party.forEach(m => { m.hp = HG.stat(m, 'hp'); });
+          if (opts.onLose) await opts.onLose();
           const r0 = HG.stages[HG.state.era].respawn;
           await S.warp(r0.map, r0.x, r0.y, r0.dir);
         }

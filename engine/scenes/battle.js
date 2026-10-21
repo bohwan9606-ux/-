@@ -151,7 +151,18 @@ HG.BattleScene = class extends Phaser.Scene {
     this.stages.foe = { atk: 0, def: 0 };
     this.foeHud.objs.forEach(x => x.setVisible(true));
     this.drawHud(this.foeHud, f);
-    await this.msg(`${this.opts.trainer.name}${HG.josa(this.opts.trainer.name, '은', '는')} ${HG.monName(f)}${HG.josa(HG.monName(f), '을', '를')}내보냈다!`);
+    // 시간 괴물에게 홀린 부하 유물 (보랏빛으로 일렁임)
+    const pos = this.opts.trainer.possessed;
+    if (pos && pos.includes(this.foeIdx)) {
+      if (this.swirl) this.swirl.remove();
+      this.swirl = this.time.addEvent({ delay: 120, loop: true, callback: () => this.foeSpr.setTint(Math.random() < 0.5 ? 0xd8a8ff : 0xb890ff) });
+      await this.msg(`${this.opts.trainer.name}${HG.josa(this.opts.trainer.name, '이', '가')} 시간 괴물에게 홀린 ${HG.monName(f)}${HG.josa(HG.monName(f), '을', '를')} 앞세웠다!`);
+      return;
+    }
+    this.foeSpr.clearTint();
+    const tn = this.opts.trainer.name;
+    if (HG.monName(f) === tn) await this.msg(`${tn}${HG.josa(tn, '이', '가')} 직접 나섰다!`);
+    else await this.msg(`${tn}${HG.josa(tn, '은', '는')} ${HG.monName(f)}${HG.josa(HG.monName(f), '을', '를')} 내보냈다!`);
   }
 
   async sendMe(first) {
@@ -401,6 +412,9 @@ HG.BattleScene = class extends Phaser.Scene {
         await new Promise(r => this.tweens.add({ targets: this.foeSpr, alpha: 0.3, duration: 150, yoyo: true, repeat: 2, onComplete: r }));
         await this.msg(`${HG.monName(this.foe)}에게서 시간 괴물이 빠져나갔다!`);
       } else {
+        // 마지막 상대의 2단계: 쓰러진 줄 알았는데 진짜 모습으로 다시 일어남
+        const p2 = this.opts.trainer.phase2;
+        if (p2 && !this.phase2Done && this.foeIdx === this.foes.length - 1) { this.phase2Done = true; await this.phase2(p2); return false; }
         await new Promise(r => this.tweens.add({ targets: this.foeSpr, y: this.foeSpr.y + 30, alpha: 0, duration: 400, onComplete: r }));
         await this.msg(`상대 ${HG.monName(this.foe)}${HG.josa(HG.monName(this.foe), '은', '는')} 힘이 빠져 물러났다!`);
       }
@@ -438,6 +452,22 @@ HG.BattleScene = class extends Phaser.Scene {
       return false;
     }
     return false;
+  }
+
+  async phase2(p) {
+    const f = this.foe;
+    await new Promise(r => this.tweens.add({ targets: this.foeSpr, alpha: 0.2, duration: 120, yoyo: true, repeat: 3, onComplete: r }));
+    for (const line of (p.lines || [])) await this.msg(line);
+    HG.Sound.sfx('buff');
+    this.cameras.main.shake(450, 0.02);
+    this.cameras.main.flash(600, 170, 90, 230);
+    this.foeSpr.setAlpha(1).setTint(0xff8ac8);
+    this.tweens.add({ targets: this.foeSpr, scale: 2.3, duration: 250, yoyo: true });
+    if (p.level) f.level = p.level;
+    f.hp = Math.max(1, Math.floor(HG.stat(f, 'hp') * (p.hp || 0.5)));
+    this.stages.foe = { atk: p.atk || 0, def: p.def || 0 };
+    this.drawHud(this.foeHud, f);
+    await this.msg(p.reveal || `${HG.monName(f)}${HG.josa(HG.monName(f), '이', '가')} 진짜 모습을 드러냈다!`);
   }
 
   async giveExp(foe) {

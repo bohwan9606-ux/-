@@ -35,15 +35,30 @@ HG.Region = {
       if (cleared) { await ev.say(...(b.after || [b.name + ': 다시 만나 반갑구나.'])); return; }
       const d = tasks(ev.state);
       if (d < N) { await ev.say(`${b.name}: 먼저 여러 곳을 돌아보며 사람들을 도와주고 오너라. (지금 ${d}/${N})`); return; }
-      await ev.say(...b.story);
-      const n = await ev.quiz(b.quiz || spec.quiz, b.quizCount || 3);
+      // 마지막 보스는 다시 도전할 때 퀴즈를 건너뛰고 처음 맞힌 개수를 그대로 씀
+      const QK = ERA + '_bossQuiz', LK = ERA + '_bossLoss', F = HG.state.flags;
+      let n;
+      if (b.final && F[QK] != null) {
+        n = F[QK];
+        await ev.say(`${b.name}: 또 왔구나, 꼬마 시간 여행자! 이번엔 그냥 넘어가지 않겠다!`, `(지난번 퀴즈에서 맞힌 ${n}개가 그대로 적용돼요.)`);
+      } else {
+        await ev.say(...b.story);
+        n = await ev.quiz(b.quiz || spec.quiz, b.quizCount || 3);
+        if (b.final) F[QK] = n;
+      }
       if (!b.team) {
         if (n < 2) { await ev.say(`${b.name}: ${n}개를 맞혔구나. 조금만 더 알아보고 다시 오너라. 사람들의 이야기를 떠올려 보렴!`); return; }
         await ev.say(`${b.name}: ${n}개나 맞혔구나!`);
       } else {
-        const boost = n >= 3 ? 2 : n >= 2 ? 1 : 0;
+        const [big, small] = b.boostAt || [3, 2];
+        const boost = n >= big ? 2 : n >= small ? 1 : 0;
         await ev.say(`${b.name}: ${n}개를 맞혔구나. ` + (boost ? '좋다, 겨뤄 보자!' : '아쉽지만 힘으로 겨뤄 보자!'));
-        const r = await ev.battle({ trainer: { name: b.name, sprite: b.who, scale: b.whoScale, team: b.team, lose: b.lose || [b.name + ': 훌륭하구나!'] }, bg: b.bg || 'bb_castle', music: 'boss', atkBoost: boost });
+        const onLose = b.final ? async () => {
+          F[LK] = (F[LK] || 0) + 1;
+          await ev.say(HG.pick(['할아버지(무전기): 괜찮다, {name}! 동료들을 골고루 키워서 다시 도전해 보렴.', '할아버지(무전기): 시간 괴물 대왕은 「종이」 기록의 힘에 약하단다. 기록 유물을 데려가 보렴!', '할아버지(무전기): 들판에서 유물들과 겨루며 레벨을 올리고 다시 가 보자!']));
+          if (F[LK] === 2) { await ev.say('할아버지(무전기): 이걸 가져가렴. 힘든 싸움에 도움이 될 거다.'); await ev.give('meat', 3); await ev.give('berry', 2); }
+        } : null;
+        const r = await ev.battle({ trainer: { name: b.name, sprite: b.who, scale: b.whoScale, team: b.team, intro: b.intro, possessed: b.possessed, phase2: b.phase2, lose: b.lose || [b.name + ': 훌륭하구나!'] }, bg: b.bg || 'bb_castle', music: 'boss', atkBoost: boost, onLose });
         if (r !== 'win') return;
       }
       await ev.say(...b.win);
