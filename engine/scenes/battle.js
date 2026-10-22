@@ -317,13 +317,21 @@ HG.BattleScene = class extends Phaser.Scene {
     return null;
   }
 
+  // 스승이 데리고 나온 동료: 회복은 한 판에 2번까지, 방어 올리기는 한 단계까지 (끝나지 않는 싸움 방지)
+  foeLimit(f, mv) {
+    if (!this.opts.trainer) return true;
+    const M = HG.MOVES[mv];
+    if (M.kind === 'heal') return (f._heals || 0) < 2;
+    if (M.kind === 'buff' && M.stat === 'def') return this.stages.foe.def < 1;
+    return true;
+  }
   foeChoose() {
-    const f = this.foe, ms = f.moves;
+    const f = this.foe, ms = f.moves.filter(m => this.foeLimit(f, m));
     const healMv = ms.find(m => HG.MOVES[m].kind === 'heal');
     if (healMv && f.hp < HG.stat(f, 'hp') * 0.35 && Math.random() < 0.6) return healMv;
     const dmg = ms.filter(m => HG.MOVES[m].kind === 'dmg');
     if (dmg.length && Math.random() < (this.opts.trainer ? 0.8 : 0.65)) return HG.pick(dmg);
-    return HG.pick(ms);
+    return HG.pick(ms.length ? ms : f.moves);
   }
 
   mult(stage) { return stage >= 0 ? 1 + 0.5 * stage : 1 / (1 + 0.5 * -stage); }
@@ -343,7 +351,7 @@ HG.BattleScene = class extends Phaser.Scene {
     await new Promise(r => this.tweens.add({ targets: aSpr, x: aSpr.x + dx, y: aSpr.y - (who === 'me' ? 4 : -4), duration: 90, yoyo: true, onComplete: r }));
 
     if (mv.kind === 'buff') {
-      if (aSt[mv.stat] >= 2) { await this.msg('더 이상 오르지 않는다!'); return; }
+      if (aSt[mv.stat] >= 2 || (who === 'foe' && !this.foeLimit(atk, moveName))) { await this.msg('더 이상 오르지 않는다!'); return; }
       aSt[mv.stat]++; HG.Sound.sfx('buff');
       this.sparkle(aSpr, 0xe3d49a);
       await this.msg(`${HG.monName(atk)}의 ${mv.stat === 'atk' ? '공격' : '방어'}이 올랐다!`);
@@ -358,11 +366,25 @@ HG.BattleScene = class extends Phaser.Scene {
     }
     if (mv.kind === 'heal') {
       const max = HG.stat(atk, 'hp');
+      if (who === 'foe' && !this.foeLimit(atk, moveName)) { await this.msg('하지만 더 이상 회복할 힘이 없다!'); return; }
       if (atk.hp >= max) { await this.msg('체력이 이미 가득하다!'); return; }
       const from = atk.hp; atk.hp = Math.min(max, atk.hp + Math.ceil(max * mv.amount));
       HG.Sound.sfx('heal'); this.sparkle(aSpr, 0x6fa04a);
       await this.tweenHp(who === 'me' ? this.meHud : this.foeHud, atk, from);
       await this.msg(`${HG.monName(atk)}의 체력이 회복되었다!`);
+      if (who === 'foe' && this.opts.trainer) {
+        atk._heals = (atk._heals || 0) + 1;
+        // 두 번째 회복 때 한 번만 힌트
+        if (atk._heals === 2 && !this.healTip) {
+          this.healTip = true;
+          const t = HG.ARTIFACTS[atk.species].type;
+          const weak = Object.keys(HG.TYPE_CHART).filter(k => HG.TYPE_CHART[k][t] > 1);
+          const resist = Object.keys(HG.TYPE_CHART).filter(k => HG.TYPE_CHART[k][t] < 1);
+          await this.msg(`할아버지(무전기): ${HG.monName(atk)}${HG.josa(HG.monName(atk), '은', '는')} 이제 회복할 힘이 없어! 조금만 더 힘내렴!`);
+          if (resist.length) await this.msg(`할아버지(무전기): 「${resist.join('·')}」 기술은 잘 안 통하니 다른 기술을 써 보렴.`);
+          else if (weak.length) await this.msg(`할아버지(무전기): 「${weak.join('·')}」 기술이 잘 통한단다.`);
+        }
+      }
       return;
     }
     // 공격
